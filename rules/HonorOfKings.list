@@ -1,6 +1,9 @@
-# 王者荣耀 / 腾讯游戏直连补充规则
-# 保守策略：仅放置与腾讯游戏/CDN高度相关的域名。
-# 不直接把整个 qq.com / tencent.com 全部 DIRECT，避免扩大匹配范围。
+# 王者荣耀 / 腾讯游戏 DIRECT 覆盖层
+# 原则：尽量避免把整个 qq.com / tencent.com / myqcloud.com 强制直连，
+# 防止 QQ 网页、腾讯云或其他腾讯业务被游戏规则误伤。
+#
+# 王者荣耀实际游戏网关可能直接使用 IP/UDP，域名并非全部流量。
+# 后续应根据 Shadowrocket「数据 -> 最近请求」实测补充精确域名/IP。
 
 DOMAIN-SUFFIX,game.qq.com,DIRECT
 DOMAIN-SUFFIX,qqgame.qq.com,DIRECT
@@ -8,6 +11,3 @@ DOMAIN-SUFFIX,ieg.com,DIRECT
 DOMAIN-SUFFIX,gtimg.cn,DIRECT
 DOMAIN-SUFFIX,gtimg.com,DIRECT
 DOMAIN-SUFFIX,idqqimg.com,DIRECT
-DOMAIN-SUFFIX,qq.com,DIRECT
-DOMAIN-SUFFIX,tencent.com,DIRECT
-DOMAIN-SUFFIX,myqcloud.com,DIRECT
