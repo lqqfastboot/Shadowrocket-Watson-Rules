@@ -1,0 +1,36 @@
+# 抖音商城 / 抖音电商 DIRECT 覆盖层
+# 目的：商城首页、商品详情、图片/视频、订单与电商接口优先直连。
+# 依据抖音电商 jinritemai 域名及 ByteDance/DouYin 公开规则中的电商相关域名整理。
+
+DOMAIN-SUFFIX,douyin.com,DIRECT
+DOMAIN-SUFFIX,douyinec.com,DIRECT
+DOMAIN-SUFFIX,douyinliving.com,DIRECT
+DOMAIN-SUFFIX,jinritemai.com,DIRECT
+DOMAIN-SUFFIX,jinritemai-inc.com,DIRECT
+DOMAIN-SUFFIX,temaiapi.com,DIRECT
+DOMAIN-SUFFIX,ecom-lightapp.com,DIRECT
+DOMAIN-SUFFIX,ecombdapi.com,DIRECT
+DOMAIN-SUFFIX,ecombdimg.com,DIRECT
+DOMAIN-SUFFIX,ecombdstatic.com,DIRECT
+DOMAIN-SUFFIX,ecombdvod.com,DIRECT
+
+# 抖音商城依赖的抖音静态资源 / 图片 / 视频 CDN
+DOMAIN-SUFFIX,amemv.com,DIRECT
+DOMAIN-SUFFIX,douyincdn.com,DIRECT
+DOMAIN-SUFFIX,douyinpic.com,DIRECT
+DOMAIN-SUFFIX,douyinstatic.com,DIRECT
+DOMAIN-SUFFIX,douyinvod.com,DIRECT
+DOMAIN-SUFFIX,idouyinvod.com,DIRECT
+DOMAIN-SUFFIX,pstatp.com,DIRECT
+DOMAIN-SUFFIX,snssdk.com,DIRECT
+DOMAIN-SUFFIX,byteimg.com,DIRECT
+DOMAIN-SUFFIX,bytegecko.com,DIRECT
+DOMAIN-SUFFIX,bytescm.com,DIRECT
+DOMAIN-SUFFIX,zijieapi.com,DIRECT
+DOMAIN-SUFFIX,zijiecdn.cn,DIRECT
+DOMAIN-SUFFIX,zijiecdn.com,DIRECT
+DOMAIN-SUFFIX,zijieimg.cn,DIRECT
+DOMAIN-SUFFIX,zijieimg.com,DIRECT
+DOMAIN-SUFFIX,zjbyte.cn,DIRECT
+DOMAIN-SUFFIX,zjbyte.com,DIRECT
+DOMAIN-SUFFIX,zjcdn.com,DIRECT
