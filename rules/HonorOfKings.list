@@ -1,0 +1,13 @@
+# 王者荣耀 / 腾讯游戏直连补充规则
+# 保守策略：仅放置与腾讯游戏/CDN高度相关的域名。
+# 不直接把整个 qq.com / tencent.com 全部 DIRECT，避免扩大匹配范围。
+
+DOMAIN-SUFFIX,game.qq.com,DIRECT
+DOMAIN-SUFFIX,qqgame.qq.com,DIRECT
+DOMAIN-SUFFIX,ieg.com,DIRECT
+DOMAIN-SUFFIX,gtimg.cn,DIRECT
+DOMAIN-SUFFIX,gtimg.com,DIRECT
+DOMAIN-SUFFIX,idqqimg.com,DIRECT
+DOMAIN-SUFFIX,qq.com,DIRECT
+DOMAIN-SUFFIX,tencent.com,DIRECT
+DOMAIN-SUFFIX,myqcloud.com,DIRECT
