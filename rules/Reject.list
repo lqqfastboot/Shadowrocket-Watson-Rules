@@ -1,0 +1,6 @@
+# Watson 补充广告/跟踪规则
+# 主广告库由 watson.conf 引用上游维护列表；这里只保留少量补充项。
+DOMAIN-SUFFIX,doubleclick.net,REJECT
+DOMAIN-SUFFIX,googleadservices.com,REJECT
+DOMAIN-SUFFIX,googlesyndication.com,REJECT
+DOMAIN-SUFFIX,app-measurement.com,REJECT
