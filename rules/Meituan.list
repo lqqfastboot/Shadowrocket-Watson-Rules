@@ -1,0 +1,10 @@
+# 美团 / 美团外卖 DIRECT 覆盖层
+# 基于 blackmatrix7 MeiTuan 规则集的核心域名。
+
+DOMAIN-SUFFIX,meituan.com,DIRECT
+DOMAIN-SUFFIX,meituan.net,DIRECT
+DOMAIN-SUFFIX,sankuai.com,DIRECT
+DOMAIN-SUFFIX,mtyun.com,DIRECT
+DOMAIN-SUFFIX,dianping.com,DIRECT
+DOMAIN-SUFFIX,maoyan.com,DIRECT
+DOMAIN-SUFFIX,neixin.cn,DIRECT
