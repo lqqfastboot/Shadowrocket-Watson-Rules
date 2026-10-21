@@ -1,0 +1,4 @@
+# Wise / TransferWise -> PROXY
+# Wise 官方现使用 wise.com；保留旧品牌 transferwise.com 以覆盖历史接口、跳转及兼容服务。
+DOMAIN-SUFFIX,wise.com,PROXY
+DOMAIN-SUFFIX,transferwise.com,PROXY
