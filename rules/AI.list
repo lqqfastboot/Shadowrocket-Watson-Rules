@@ -1,9 +1,21 @@
-# AI services -> PROXY
+# AI services -> US Tampa policy in watson.conf
+# OpenAI / ChatGPT
 DOMAIN-SUFFIX,openai.com,PROXY
 DOMAIN-SUFFIX,chatgpt.com,PROXY
 DOMAIN-SUFFIX,oaistatic.com,PROXY
 DOMAIN-SUFFIX,oaiusercontent.com,PROXY
+
+# Anthropic / Claude
 DOMAIN-SUFFIX,anthropic.com,PROXY
 DOMAIN-SUFFIX,claude.ai,PROXY
+
+# Perplexity
 DOMAIN-SUFFIX,perplexity.ai,PROXY
+
+# Google Gemini
 DOMAIN-SUFFIX,gemini.google.com,PROXY
+
+# Meta AI / Llama
+DOMAIN-SUFFIX,meta.ai,PROXY
+DOMAIN-SUFFIX,ai.meta.com,PROXY
+DOMAIN-SUFFIX,llama.com,PROXY
