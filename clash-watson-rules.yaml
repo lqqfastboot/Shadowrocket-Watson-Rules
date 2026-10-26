@@ -60,9 +60,24 @@ rules:
   - DOMAIN-SUFFIX,alipay.com,DIRECT
   - DOMAIN-SUFFIX,alipayobjects.com,DIRECT
 
-  # 中国银行 / 银联
+  # 中国银行 / 银联 / 主要中资银行：显式直连
   - DOMAIN-SUFFIX,boc.cn,DIRECT
   - DOMAIN-SUFFIX,bankofchina.com,DIRECT
+  - DOMAIN-SUFFIX,icbc.com.cn,DIRECT
+  - DOMAIN-SUFFIX,ccb.com,DIRECT
+  - DOMAIN-SUFFIX,abchina.com,DIRECT
+  - DOMAIN-SUFFIX,bankcomm.com,DIRECT
+  - DOMAIN-SUFFIX,psbc.com,DIRECT
+  - DOMAIN-SUFFIX,cmbchina.com,DIRECT
+  - DOMAIN-SUFFIX,spdb.com.cn,DIRECT
+  - DOMAIN-SUFFIX,citicbank.com,DIRECT
+  - DOMAIN-SUFFIX,cmbc.com.cn,DIRECT
+  - DOMAIN-SUFFIX,cib.com.cn,DIRECT
+  - DOMAIN-SUFFIX,cebbank.com,DIRECT
+  - DOMAIN-SUFFIX,hxb.com.cn,DIRECT
+  - DOMAIN-SUFFIX,pingan.com,DIRECT
+  - DOMAIN-SUFFIX,pinganbank.com.cn,DIRECT
+  - DOMAIN-SUFFIX,cgbchina.com.cn,DIRECT
   - DOMAIN-SUFFIX,95516.com,DIRECT
   - DOMAIN-SUFFIX,unionpay.com,DIRECT
   - DOMAIN-SUFFIX,unionpayintl.com,DIRECT
