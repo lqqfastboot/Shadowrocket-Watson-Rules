@@ -1,4 +1,4 @@
-# Watson Clash / Mihomo 轻量规则库
+# Watson Clash / Mihomo 轻量规则库 V2
 # 面向支持 proxy-groups + rules 的 iOS Clash 客户端规则库。
 # 不修改 DNS / TUN / 端口等客户端全局设置，不包含任何节点凭据。
 # AI / TikTok / X -> 美国坦帕；YouTube / Google -> 越南；其他海外 -> 越南优先、瑞典备用。
@@ -7,7 +7,7 @@ proxy-groups:
   - name: US-Tampa
     type: url-test
     include-all: true
-    filter: '佛罗里达州.*坦帕'
+    filter: '(?i)(佛罗里达州.*坦帕|Tampa|Florida.*Tampa)'
     url: https://www.gstatic.com/generate_204
     interval: 600
     tolerance: 50
@@ -15,7 +15,7 @@ proxy-groups:
   - name: Vietnam
     type: url-test
     include-all: true
-    filter: '越南胡志明'
+    filter: '(?i)(越南胡志明|Vietnam.*HCM|Ho Chi Minh)'
     url: https://www.gstatic.com/generate_204
     interval: 600
     tolerance: 50
@@ -23,7 +23,7 @@ proxy-groups:
   - name: Sweden
     type: url-test
     include-all: true
-    filter: '瑞典'
+    filter: '(?i)(瑞典|Sweden)'
     url: https://www.gstatic.com/generate_204
     interval: 600
     tolerance: 50
@@ -45,6 +45,13 @@ rules:
   - IP-CIDR,169.254.0.0/16,DIRECT,no-resolve
   - IP-CIDR,224.0.0.0/4,DIRECT,no-resolve
   - DOMAIN-SUFFIX,local,DIRECT
+
+  # WebRTC / STUN 防真实 IP 泄漏
+  # 直接拒绝常见 STUN 探测，防止浏览器通过 UDP 暴露本地公网出口。
+  - DOMAIN-KEYWORD,stun,REJECT
+  - DST-PORT,3478,REJECT
+  - DST-PORT,19302,REJECT
+  - DST-PORT,5349,REJECT
 
   # 王者荣耀 / 腾讯 / 微信 / QQ
   - GEOSITE,tencent,DIRECT
@@ -105,6 +112,21 @@ rules:
   - DOMAIN-SUFFIX,meta.ai,US-Tampa
   - DOMAIN-SUFFIX,ai.meta.com,US-Tampa
   - DOMAIN-SUFFIX,llama.com,US-Tampa
+
+  # Meta 全家桶 -> 美国坦帕
+  - DOMAIN-SUFFIX,meta.com,US-Tampa
+  - DOMAIN-SUFFIX,facebook.com,US-Tampa
+  - DOMAIN-SUFFIX,facebook.net,US-Tampa
+  - DOMAIN-SUFFIX,fb.com,US-Tampa
+  - DOMAIN-SUFFIX,fbcdn.net,US-Tampa
+  - DOMAIN-SUFFIX,fbsbx.com,US-Tampa
+  - DOMAIN-SUFFIX,messenger.com,US-Tampa
+  - DOMAIN-SUFFIX,instagram.com,US-Tampa
+  - DOMAIN-SUFFIX,cdninstagram.com,US-Tampa
+  - DOMAIN-SUFFIX,threads.net,US-Tampa
+  - DOMAIN-SUFFIX,whatsapp.com,US-Tampa
+  - DOMAIN-SUFFIX,whatsapp.net,US-Tampa
+  - DOMAIN-SUFFIX,oculus.com,US-Tampa
 
   # TikTok -> 美国坦帕
   - GEOSITE,tiktok,US-Tampa
