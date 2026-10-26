@@ -11,6 +11,9 @@ proxy-groups:
     url: https://www.gstatic.com/generate_204
     interval: 600
     tolerance: 50
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
 
   - name: Vietnam
     type: url-test
@@ -19,6 +22,9 @@ proxy-groups:
     url: https://www.gstatic.com/generate_204
     interval: 600
     tolerance: 50
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
 
   - name: Sweden
     type: url-test
@@ -27,6 +33,9 @@ proxy-groups:
     url: https://www.gstatic.com/generate_204
     interval: 600
     tolerance: 50
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
 
   - name: Overseas
     type: fallback
@@ -35,6 +44,9 @@ proxy-groups:
       - Sweden
     url: https://www.gstatic.com/generate_204
     interval: 600
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
 
 rules:
   # 局域网 / DLNA / UPnP / mDNS 优先直连
@@ -47,11 +59,11 @@ rules:
   - DOMAIN-SUFFIX,local,DIRECT
 
   # WebRTC / STUN 防真实 IP 泄漏
-  # 直接拒绝常见 STUN 探测，防止浏览器通过 UDP 暴露本地公网出口。
+  # 域名命中 STUN 时直接拒绝；端口规则仅限制 UDP，避免误伤 TCP/TURN 回退。
   - DOMAIN-KEYWORD,stun,REJECT
-  - DST-PORT,3478,REJECT
-  - DST-PORT,19302,REJECT
-  - DST-PORT,5349,REJECT
+  - AND,((NETWORK,UDP),(DST-PORT,3478)),REJECT
+  - AND,((NETWORK,UDP),(DST-PORT,19302)),REJECT
+  - AND,((NETWORK,UDP),(DST-PORT,5349)),REJECT
 
   # 王者荣耀 / 腾讯 / 微信 / QQ
   - GEOSITE,tencent,DIRECT
