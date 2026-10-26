@@ -113,6 +113,17 @@ rules:
   - DOMAIN-SUFFIX,ai.meta.com,US-Tampa
   - DOMAIN-SUFFIX,llama.com,US-Tampa
 
+  # AI 全家桶扩展 -> 美国坦帕
+  - DOMAIN-SUFFIX,grok.com,US-Tampa
+  - DOMAIN-SUFFIX,x.ai,US-Tampa
+  - DOMAIN-SUFFIX,cursor.com,US-Tampa
+  - DOMAIN-SUFFIX,cursor.sh,US-Tampa
+  - DOMAIN-SUFFIX,githubcopilot.com,US-Tampa
+  - DOMAIN,copilot.microsoft.com,US-Tampa
+  - DOMAIN-SUFFIX,poe.com,US-Tampa
+  - DOMAIN-SUFFIX,character.ai,US-Tampa
+  - DOMAIN-SUFFIX,manus.im,US-Tampa
+
   # Meta 全家桶 -> 美国坦帕
   - DOMAIN-SUFFIX,meta.com,US-Tampa
   - DOMAIN-SUFFIX,facebook.com,US-Tampa
