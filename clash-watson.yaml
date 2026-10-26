@@ -1,0 +1,233 @@
+# Watson Mihomo / Clash Meta Rules
+# 仅提供分流逻辑，不包含节点、UUID、密码或订阅 Token。
+# 使用前请在客户端已有节点/订阅基础上加载本规则配置。
+# AI / TikTok / X -> 美国坦帕；Google / YouTube -> 越南；其他海外 -> 越南优先、瑞典备用。
+
+mode: rule
+log-level: info
+ipv6: false
+allow-lan: true
+unified-delay: true
+tcp-concurrent: true
+
+# DNS：国内解析优先；代理流量由 Mihomo 接管。
+dns:
+  enable: true
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter:
+    - '*.lan'
+    - '*.local'
+    - 'localhost.ptlogin2.qq.com'
+    - '+.stun.*.*'
+    - '+.stun.*.*.*'
+  nameserver:
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
+  fallback:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+
+# 本文件不保存任何节点凭据。
+# include-all 会使用客户端当前已加载的全部节点，再通过名称正则筛选对应地区。
+proxy-groups:
+  - name: US-Tampa
+    type: url-test
+    include-all: true
+    filter: '(?i)佛罗里达州.*坦帕'
+    url: https://www.gstatic.com/generate_204
+    interval: 600
+    tolerance: 50
+
+  - name: Vietnam
+    type: url-test
+    include-all: true
+    filter: '(?i)越南胡志明'
+    url: https://www.gstatic.com/generate_204
+    interval: 600
+    tolerance: 50
+
+  - name: Sweden
+    type: url-test
+    include-all: true
+    filter: '(?i)瑞典'
+    url: https://www.gstatic.com/generate_204
+    interval: 600
+    tolerance: 50
+
+  - name: Overseas
+    type: fallback
+    proxies:
+      - Vietnam
+      - Sweden
+    url: https://www.gstatic.com/generate_204
+    interval: 600
+
+rule-providers:
+  HonorOfKings:
+    type: http
+    behavior: classical
+    format: text
+    url: https://raw.githubusercontent.com/lqqfastboot/Shadowrocket-Watson-Rules/main/rules/HonorOfKings.list
+    path: ./ruleset/watson-honorofkings.list
+    interval: 86400
+
+  Tencent:
+    type: http
+    behavior: classical
+    format: text
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Tencent/Tencent.list
+    path: ./ruleset/watson-tencent.list
+    interval: 86400
+
+  WeChat:
+    type: http
+    behavior: classical
+    format: text
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/WeChat/WeChat.list
+    path: ./ruleset/watson-wechat.list
+    interval: 86400
+
+  AliPay:
+    type: http
+    behavior: classical
+    format: text
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AliPay/AliPay.list
+    path: ./ruleset/watson-alipay.list
+    interval: 86400
+
+  TikTok:
+    type: http
+    behavior: classical
+    format: text
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/TikTok/TikTok.list
+    path: ./ruleset/watson-tiktok.list
+    interval: 86400
+
+  YouTube:
+    type: http
+    behavior: classical
+    format: text
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.list
+    path: ./ruleset/watson-youtube.list
+    interval: 86400
+
+  Google:
+    type: http
+    behavior: classical
+    format: text
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.list
+    path: ./ruleset/watson-google.list
+    interval: 86400
+
+  Twitter:
+    type: http
+    behavior: classical
+    format: text
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitter/Twitter.list
+    path: ./ruleset/watson-twitter.list
+    interval: 86400
+
+  AdvertisingLite:
+    type: http
+    behavior: classical
+    format: text
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AdvertisingLite/AdvertisingLite.list
+    path: ./ruleset/watson-advertising-lite.list
+    interval: 86400
+
+rules:
+  # 局域网 / DLNA / UPnP 优先直连
+  - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+  - IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
+  - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,169.254.0.0/16,DIRECT,no-resolve
+  - IP-CIDR,224.0.0.0/4,DIRECT,no-resolve
+  - DOMAIN-SUFFIX,local,DIRECT
+
+  # 国内核心服务
+  - RULE-SET,HonorOfKings,DIRECT
+  - RULE-SET,Tencent,DIRECT
+  - RULE-SET,WeChat,DIRECT
+  - RULE-SET,AliPay,DIRECT
+
+  # 百度全家桶 DIRECT
+  - DOMAIN-SUFFIX,baidu.com,DIRECT
+  - DOMAIN-SUFFIX,baidupcs.com,DIRECT
+  - DOMAIN-SUFFIX,bdstatic.com,DIRECT
+  - DOMAIN-SUFFIX,bcebos.com,DIRECT
+  - DOMAIN-SUFFIX,baidustatic.com,DIRECT
+  - DOMAIN-SUFFIX,baiducontent.com,DIRECT
+  - DOMAIN-SUFFIX,bdimg.com,DIRECT
+  - DOMAIN-SUFFIX,bdydns.com,DIRECT
+
+  # 中国银行 / 银联 / 酷安 / 美团 / 抖音电商补充
+  - DOMAIN-SUFFIX,boc.cn,DIRECT
+  - DOMAIN-SUFFIX,bankofchina.com,DIRECT
+  - DOMAIN-SUFFIX,95516.com,DIRECT
+  - DOMAIN-SUFFIX,unionpay.com,DIRECT
+  - DOMAIN-SUFFIX,unionpayintl.com,DIRECT
+  - DOMAIN-SUFFIX,chinapay.com,DIRECT
+  - DOMAIN-SUFFIX,coolapk.com,DIRECT
+  - DOMAIN-SUFFIX,coolapkmarket.com,DIRECT
+  - DOMAIN-SUFFIX,meituan.com,DIRECT
+  - DOMAIN-SUFFIX,meituan.net,DIRECT
+  - DOMAIN-SUFFIX,sankuai.com,DIRECT
+  - DOMAIN-SUFFIX,mtyun.com,DIRECT
+  - DOMAIN-SUFFIX,dianping.com,DIRECT
+  - DOMAIN-SUFFIX,maoyan.com,DIRECT
+  - DOMAIN-SUFFIX,neixin.cn,DIRECT
+  - DOMAIN-SUFFIX,douyinec.com,DIRECT
+  - DOMAIN-SUFFIX,jinritemai.com,DIRECT
+  - DOMAIN-SUFFIX,temaiapi.com,DIRECT
+  - DOMAIN-SUFFIX,ecombdapi.com,DIRECT
+  - DOMAIN-SUFFIX,ecombdimg.com,DIRECT
+  - DOMAIN-SUFFIX,ecombdstatic.com,DIRECT
+  - DOMAIN-SUFFIX,ecombdvod.com,DIRECT
+
+  # AI -> 美国坦帕；Gemini 在 Google 规则之前，因此保持美国。
+  - DOMAIN-SUFFIX,openai.com,US-Tampa
+  - DOMAIN-SUFFIX,chatgpt.com,US-Tampa
+  - DOMAIN-SUFFIX,oaistatic.com,US-Tampa
+  - DOMAIN-SUFFIX,oaiusercontent.com,US-Tampa
+  - DOMAIN-SUFFIX,anthropic.com,US-Tampa
+  - DOMAIN-SUFFIX,claude.ai,US-Tampa
+  - DOMAIN-SUFFIX,perplexity.ai,US-Tampa
+  - DOMAIN,gemini.google.com,US-Tampa
+  - DOMAIN-SUFFIX,meta.ai,US-Tampa
+  - DOMAIN-SUFFIX,ai.meta.com,US-Tampa
+  - DOMAIN-SUFFIX,llama.com,US-Tampa
+
+  # TikTok / X -> 美国坦帕
+  - RULE-SET,TikTok,US-Tampa
+  - RULE-SET,Twitter,US-Tampa
+
+  # YouTube / Google 全家桶 -> 越南
+  - RULE-SET,YouTube,Vietnam
+  - RULE-SET,Google,Vietnam
+
+  # Wise
+  - DOMAIN-SUFFIX,wise.com,Overseas
+  - DOMAIN-SUFFIX,transferwise.com,Overseas
+
+  # GitHub / Telegram 等海外常用服务
+  - DOMAIN-SUFFIX,github.com,Overseas
+  - DOMAIN-SUFFIX,githubusercontent.com,Overseas
+  - DOMAIN-SUFFIX,githubassets.com,Overseas
+  - DOMAIN-SUFFIX,telegram.org,Overseas
+  - DOMAIN-SUFFIX,t.me,Overseas
+  - DOMAIN-SUFFIX,telegra.ph,Overseas
+
+  # 广告拦截
+  - RULE-SET,AdvertisingLite,REJECT
+
+  # 中国大陆 IP 直连
+  - GEOIP,CN,DIRECT,no-resolve
+
+  # 其余流量：越南优先，瑞典备用
+  - MATCH,Overseas
