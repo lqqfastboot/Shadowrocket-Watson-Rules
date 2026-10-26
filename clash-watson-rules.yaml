@@ -1,0 +1,137 @@
+# Watson Clash / Mihomo 轻量规则库
+# 面向支持 proxy-groups + rules 的 iOS Clash 客户端规则库。
+# 不修改 DNS / TUN / 端口等客户端全局设置，不包含任何节点凭据。
+# AI / TikTok / X -> 美国坦帕；YouTube / Google -> 越南；其他海外 -> 越南优先、瑞典备用。
+
+proxy-groups:
+  - name: US-Tampa
+    type: url-test
+    include-all: true
+    filter: '佛罗里达州.*坦帕'
+    url: https://www.gstatic.com/generate_204
+    interval: 600
+    tolerance: 50
+
+  - name: Vietnam
+    type: url-test
+    include-all: true
+    filter: '越南胡志明'
+    url: https://www.gstatic.com/generate_204
+    interval: 600
+    tolerance: 50
+
+  - name: Sweden
+    type: url-test
+    include-all: true
+    filter: '瑞典'
+    url: https://www.gstatic.com/generate_204
+    interval: 600
+    tolerance: 50
+
+  - name: Overseas
+    type: fallback
+    proxies:
+      - Vietnam
+      - Sweden
+    url: https://www.gstatic.com/generate_204
+    interval: 600
+
+rules:
+  # 局域网 / DLNA / UPnP / mDNS 优先直连
+  - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+  - IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
+  - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,169.254.0.0/16,DIRECT,no-resolve
+  - IP-CIDR,224.0.0.0/4,DIRECT,no-resolve
+  - DOMAIN-SUFFIX,local,DIRECT
+
+  # 王者荣耀 / 腾讯 / 微信 / QQ
+  - GEOSITE,tencent,DIRECT
+
+  # 支付宝 / 阿里系国内服务
+  - DOMAIN-SUFFIX,alipay.com,DIRECT
+  - DOMAIN-SUFFIX,alipayobjects.com,DIRECT
+
+  # 中国银行 / 银联
+  - DOMAIN-SUFFIX,boc.cn,DIRECT
+  - DOMAIN-SUFFIX,bankofchina.com,DIRECT
+  - DOMAIN-SUFFIX,95516.com,DIRECT
+  - DOMAIN-SUFFIX,unionpay.com,DIRECT
+  - DOMAIN-SUFFIX,unionpayintl.com,DIRECT
+  - DOMAIN-SUFFIX,chinapay.com,DIRECT
+
+  # 酷安
+  - DOMAIN-SUFFIX,coolapk.com,DIRECT
+  - DOMAIN-SUFFIX,coolapkmarket.com,DIRECT
+
+  # 百度全家桶
+  - DOMAIN-SUFFIX,baidu.com,DIRECT
+  - DOMAIN-SUFFIX,baidupcs.com,DIRECT
+  - DOMAIN-SUFFIX,bdstatic.com,DIRECT
+  - DOMAIN-SUFFIX,bcebos.com,DIRECT
+  - DOMAIN-SUFFIX,baidustatic.com,DIRECT
+  - DOMAIN-SUFFIX,baiducontent.com,DIRECT
+  - DOMAIN-SUFFIX,bdimg.com,DIRECT
+  - DOMAIN-SUFFIX,bdydns.com,DIRECT
+
+  # 美团 / 大众点评
+  - DOMAIN-SUFFIX,meituan.com,DIRECT
+  - DOMAIN-SUFFIX,meituan.net,DIRECT
+  - DOMAIN-SUFFIX,sankuai.com,DIRECT
+  - DOMAIN-SUFFIX,mtyun.com,DIRECT
+  - DOMAIN-SUFFIX,dianping.com,DIRECT
+  - DOMAIN-SUFFIX,maoyan.com,DIRECT
+  - DOMAIN-SUFFIX,neixin.cn,DIRECT
+
+  # 抖音商城 / 电商
+  - DOMAIN-SUFFIX,douyinec.com,DIRECT
+  - DOMAIN-SUFFIX,jinritemai.com,DIRECT
+  - DOMAIN-SUFFIX,temaiapi.com,DIRECT
+  - DOMAIN-SUFFIX,ecombdapi.com,DIRECT
+  - DOMAIN-SUFFIX,ecombdimg.com,DIRECT
+  - DOMAIN-SUFFIX,ecombdstatic.com,DIRECT
+  - DOMAIN-SUFFIX,ecombdvod.com,DIRECT
+
+  # AI -> 美国坦帕
+  - DOMAIN-SUFFIX,openai.com,US-Tampa
+  - DOMAIN-SUFFIX,chatgpt.com,US-Tampa
+  - DOMAIN-SUFFIX,oaistatic.com,US-Tampa
+  - DOMAIN-SUFFIX,oaiusercontent.com,US-Tampa
+  - DOMAIN-SUFFIX,anthropic.com,US-Tampa
+  - DOMAIN-SUFFIX,claude.ai,US-Tampa
+  - DOMAIN-SUFFIX,perplexity.ai,US-Tampa
+  - DOMAIN,gemini.google.com,US-Tampa
+  - DOMAIN-SUFFIX,meta.ai,US-Tampa
+  - DOMAIN-SUFFIX,ai.meta.com,US-Tampa
+  - DOMAIN-SUFFIX,llama.com,US-Tampa
+
+  # TikTok -> 美国坦帕
+  - GEOSITE,tiktok,US-Tampa
+
+  # X / Twitter -> 美国坦帕
+  - DOMAIN-SUFFIX,x.com,US-Tampa
+  - DOMAIN-SUFFIX,twitter.com,US-Tampa
+  - DOMAIN-SUFFIX,twimg.com,US-Tampa
+  - DOMAIN-SUFFIX,t.co,US-Tampa
+
+  # YouTube -> 越南（必须位于 Google 前）
+  - GEOSITE,youtube,Vietnam
+
+  # Google 全家桶 -> 越南；Gemini 已被上方 AI 规则优先匹配
+  - GEOSITE,google,Vietnam
+
+  # Wise
+  - DOMAIN-SUFFIX,wise.com,Overseas
+  - DOMAIN-SUFFIX,transferwise.com,Overseas
+
+  # GitHub / Telegram
+  - GEOSITE,github,Overseas
+  - GEOSITE,telegram,Overseas
+
+  # 国内域名 / IP 直连
+  - GEOSITE,cn,DIRECT
+  - GEOIP,CN,DIRECT,no-resolve
+
+  # 其他海外流量：越南优先、瑞典备用
+  - MATCH,Overseas
