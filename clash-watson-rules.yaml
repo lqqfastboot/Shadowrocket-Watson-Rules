@@ -129,9 +129,13 @@ rules:
   - GEOSITE,github,Overseas
   - GEOSITE,telegram,Overseas
 
-  # 国内域名 / IP 直连
+  # 海外网站总策略：所有非中国域名统一走代理
+  # 已在上方命中的 AI / TikTok / X / YouTube / Google 等专用策略保持不变
+  - GEOSITE,geolocation-!cn,Overseas
+
+  # 中国网站总策略：国内域名 / IP 直连
   - GEOSITE,cn,DIRECT
   - GEOIP,CN,DIRECT,no-resolve
 
-  # 其他海外流量：越南优先、瑞典备用
+  # 兜底：未匹配流量仍走海外代理，避免海外网站意外直连
   - MATCH,Overseas
