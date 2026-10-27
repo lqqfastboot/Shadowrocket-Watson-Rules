@@ -95,6 +95,12 @@ rules:
   - DOMAIN-SUFFIX,unionpayintl.com,DIRECT
   - DOMAIN-SUFFIX,chinapay.com,DIRECT
 
+  # 钱迹 App -> 直连
+  - DOMAIN-SUFFIX,qianjiapp.com,DIRECT
+  - DOMAIN-SUFFIX,xxoojoke.com,DIRECT
+  - DOMAIN-SUFFIX,litangkj.com,DIRECT
+  - DOMAIN-SUFFIX,qianjibillimage.kodo-accelerate.cn-south-1.qiniucs.com,DIRECT
+
   # 酷安
   - DOMAIN-SUFFIX,coolapk.com,DIRECT
   - DOMAIN-SUFFIX,coolapkmarket.com,DIRECT
