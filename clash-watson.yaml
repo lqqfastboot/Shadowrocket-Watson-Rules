@@ -1,7 +1,7 @@
 # Watson Mihomo / Clash Meta Rules
 # 仅提供分流逻辑，不包含节点、UUID、密码或订阅 Token。
 # 使用前请在客户端已有节点/订阅基础上加载本规则配置。
-# AI / TikTok / X -> 美国坦帕；Google / YouTube -> 越南；其他海外 -> 越南优先、瑞典备用。
+# AI / TikTok / X -> 美国坦帕；Google / YouTube -> 越南优先、瑞典备用；其他海外 -> 越南优先、瑞典备用。
 
 mode: rule
 log-level: info
@@ -207,9 +207,9 @@ rules:
   - RULE-SET,TikTok,US-Tampa
   - RULE-SET,Twitter,US-Tampa
 
-  # YouTube / Google 全家桶 -> 越南
-  - RULE-SET,YouTube,Vietnam
-  - RULE-SET,Google,Vietnam
+  # YouTube / Google 全家桶 -> 越南优先、瑞典备用
+  - RULE-SET,YouTube,Overseas
+  - RULE-SET,Google,Overseas
 
   # Wise
   - DOMAIN-SUFFIX,wise.com,Overseas
