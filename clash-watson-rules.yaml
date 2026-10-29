@@ -9,7 +9,7 @@ proxy-groups:
     include-all: true
     filter: '(?i)(佛罗里达州.*坦帕|Tampa|Florida.*Tampa)'
     url: https://www.gstatic.com/generate_204
-    interval: 600
+    interval: 120
     tolerance: 50
     lazy: true
     timeout: 5000
@@ -20,7 +20,7 @@ proxy-groups:
     include-all: true
     filter: '(?i)(越南胡志明|Vietnam.*HCM|Ho Chi Minh)'
     url: https://www.gstatic.com/generate_204
-    interval: 600
+    interval: 120
     tolerance: 50
     lazy: true
     timeout: 5000
@@ -31,7 +31,7 @@ proxy-groups:
     include-all: true
     filter: '(?i)(瑞典|Sweden)'
     url: https://www.gstatic.com/generate_204
-    interval: 600
+    interval: 120
     tolerance: 50
     lazy: true
     timeout: 5000
@@ -43,7 +43,7 @@ proxy-groups:
       - Vietnam
       - Sweden
     url: https://www.gstatic.com/generate_204
-    interval: 600
+    interval: 120
     lazy: true
     timeout: 5000
     max-failed-times: 3
