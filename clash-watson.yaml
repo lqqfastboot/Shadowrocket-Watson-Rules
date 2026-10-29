@@ -40,7 +40,7 @@ proxy-groups:
     include-all: true
     filter: '(?i)佛罗里达州.*坦帕'
     url: https://www.gstatic.com/generate_204
-    interval: 600
+    interval: 120
     tolerance: 50
 
   - name: Vietnam
@@ -48,7 +48,7 @@ proxy-groups:
     include-all: true
     filter: '(?i)越南胡志明'
     url: https://www.gstatic.com/generate_204
-    interval: 600
+    interval: 120
     tolerance: 50
 
   - name: Sweden
@@ -56,7 +56,7 @@ proxy-groups:
     include-all: true
     filter: '(?i)瑞典'
     url: https://www.gstatic.com/generate_204
-    interval: 600
+    interval: 120
     tolerance: 50
 
   - name: Overseas
@@ -65,7 +65,7 @@ proxy-groups:
       - Vietnam
       - Sweden
     url: https://www.gstatic.com/generate_204
-    interval: 600
+    interval: 120
 
 rule-providers:
   HonorOfKings:
