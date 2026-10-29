@@ -1,7 +1,7 @@
 # Watson Clash / Mihomo 轻量规则库 V2
 # 面向支持 proxy-groups + rules 的 iOS Clash 客户端规则库。
 # 不修改 DNS / TUN / 端口等客户端全局设置，不包含任何节点凭据。
-# AI / TikTok / X / PayPal -> 美国坦帕；YouTube / Google -> 越南优先、瑞典备用；其他海外 -> 越南优先、瑞典备用。
+# Apple -> 美国坦帕优先、瑞典备用；AI / TikTok / X / PayPal -> 美国坦帕；YouTube / Google -> 越南优先、瑞典备用；其他海外 -> 越南优先、瑞典备用。
 
 proxy-groups:
   - name: US-Tampa
@@ -33,6 +33,17 @@ proxy-groups:
     url: https://www.gstatic.com/generate_204
     interval: 120
     tolerance: 50
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  - name: Apple-US
+    type: fallback
+    proxies:
+      - US-Tampa
+      - Sweden
+    url: https://www.gstatic.com/generate_204
+    interval: 120
     lazy: true
     timeout: 5000
     max-failed-times: 3
@@ -132,6 +143,10 @@ rules:
   - DOMAIN-SUFFIX,ecombdimg.com,DIRECT
   - DOMAIN-SUFFIX,ecombdstatic.com,DIRECT
   - DOMAIN-SUFFIX,ecombdvod.com,DIRECT
+
+  # Apple 全家桶 -> 美国坦帕优先，瑞典备用
+  - GEOSITE,apple,Apple-US
+  - IP-CIDR,17.0.0.0/8,Apple-US,no-resolve
 
   # AI -> 美国坦帕
   - DOMAIN-SUFFIX,openai.com,US-Tampa
