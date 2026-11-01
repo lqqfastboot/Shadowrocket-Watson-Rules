@@ -1,7 +1,7 @@
 # Watson Clash / Mihomo 轻量规则库 V2
 # 面向支持 proxy-groups + rules 的 iOS Clash 客户端规则库。
 # 不修改 DNS / TUN / 端口等客户端全局设置，不包含任何节点凭据。
-# Apple / AI -> 美国坦帕优先、瑞典备用；TikTok / X / PayPal -> 美国坦帕；YouTube / Google -> 越南优先、瑞典备用；其他海外 -> 越南优先、瑞典备用。
+# Apple / AI / Meta / PayPal / TikTok / X -> 美国坦帕优先、瑞典备用；YouTube / Google -> 越南优先、瑞典备用；其他海外 -> 越南优先、瑞典备用。
 
 proxy-groups:
   - name: US-Tampa
@@ -33,6 +33,17 @@ proxy-groups:
     url: https://www.gstatic.com/generate_204
     interval: 120
     tolerance: 50
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  - name: US-Fallback
+    type: fallback
+    proxies:
+      - US-Tampa
+      - Sweden
+    url: https://www.gstatic.com/generate_204
+    interval: 120
     lazy: true
     timeout: 5000
     max-failed-times: 3
@@ -185,34 +196,33 @@ rules:
   - DOMAIN-SUFFIX,character.ai,OpenAI-US
   - DOMAIN-SUFFIX,manus.im,OpenAI-US
 
-  # Meta 全家桶 -> 美国坦帕
-  - DOMAIN-SUFFIX,meta.com,US-Tampa
-  - DOMAIN-SUFFIX,facebook.com,US-Tampa
-  - DOMAIN-SUFFIX,facebook.net,US-Tampa
-  - DOMAIN-SUFFIX,fb.com,US-Tampa
-  - DOMAIN-SUFFIX,fbcdn.net,US-Tampa
-  - DOMAIN-SUFFIX,fbsbx.com,US-Tampa
-  - DOMAIN-SUFFIX,messenger.com,US-Tampa
-  - DOMAIN-SUFFIX,instagram.com,US-Tampa
-  - DOMAIN-SUFFIX,cdninstagram.com,US-Tampa
-  - DOMAIN-SUFFIX,threads.net,US-Tampa
-  - DOMAIN-SUFFIX,whatsapp.com,US-Tampa
-  - DOMAIN-SUFFIX,whatsapp.net,US-Tampa
-  - DOMAIN-SUFFIX,oculus.com,US-Tampa
+  # Meta 全家桶 -> 美国坦帕优先，瑞典备用
+  - DOMAIN-SUFFIX,meta.com,US-Fallback
+  - DOMAIN-SUFFIX,facebook.com,US-Fallback
+  - DOMAIN-SUFFIX,facebook.net,US-Fallback
+  - DOMAIN-SUFFIX,fb.com,US-Fallback
+  - DOMAIN-SUFFIX,fbcdn.net,US-Fallback
+  - DOMAIN-SUFFIX,fbsbx.com,US-Fallback
+  - DOMAIN-SUFFIX,messenger.com,US-Fallback
+  - DOMAIN-SUFFIX,instagram.com,US-Fallback
+  - DOMAIN-SUFFIX,cdninstagram.com,US-Fallback
+  - DOMAIN-SUFFIX,threads.net,US-Fallback
+  - DOMAIN-SUFFIX,whatsapp.com,US-Fallback
+  - DOMAIN-SUFFIX,whatsapp.net,US-Fallback
+  - DOMAIN-SUFFIX,oculus.com,US-Fallback
 
-  # PayPal -> 美国坦帕
-  # PayPal 官方 Web SDK 明确使用 *.paypal.com 与 *.paypalobjects.com。
-  - DOMAIN-SUFFIX,paypal.com,US-Tampa
-  - DOMAIN-SUFFIX,paypalobjects.com,US-Tampa
+  # PayPal -> 美国坦帕优先，瑞典备用
+  - DOMAIN-SUFFIX,paypal.com,US-Fallback
+  - DOMAIN-SUFFIX,paypalobjects.com,US-Fallback
 
-  # TikTok -> 美国坦帕
-  - GEOSITE,tiktok,US-Tampa
+  # TikTok -> 美国坦帕优先，瑞典备用
+  - GEOSITE,tiktok,US-Fallback
 
-  # X / Twitter -> 美国坦帕
-  - DOMAIN-SUFFIX,x.com,US-Tampa
-  - DOMAIN-SUFFIX,twitter.com,US-Tampa
-  - DOMAIN-SUFFIX,twimg.com,US-Tampa
-  - DOMAIN-SUFFIX,t.co,US-Tampa
+  # X / Twitter -> 美国坦帕优先，瑞典备用
+  - DOMAIN-SUFFIX,x.com,US-Fallback
+  - DOMAIN-SUFFIX,twitter.com,US-Fallback
+  - DOMAIN-SUFFIX,twimg.com,US-Fallback
+  - DOMAIN-SUFFIX,t.co,US-Fallback
 
   # YouTube -> 越南优先、瑞典备用（必须位于 Google 前）
   - GEOSITE,youtube,Overseas
@@ -229,7 +239,7 @@ rules:
   - GEOSITE,telegram,Overseas
 
   # 海外网站总策略：所有非中国域名统一走代理
-  # 已在上方命中的 AI / TikTok / X / YouTube / Google 等专用策略保持不变
+  # 已在上方命中的专用策略保持不变
   - GEOSITE,geolocation-!cn,Overseas
 
   # 中国网站总策略：国内域名 / IP 直连
