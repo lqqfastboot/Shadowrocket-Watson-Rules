@@ -1,7 +1,7 @@
 # Watson Clash / Mihomo 轻量规则库 V2
 # 面向支持 proxy-groups + rules 的 iOS Clash 客户端规则库。
 # 不修改 DNS / TUN / 端口等客户端全局设置，不包含任何节点凭据。
-# Apple -> 美国坦帕优先、瑞典备用；AI / TikTok / X / PayPal -> 美国坦帕；YouTube / Google -> 越南优先、瑞典备用；其他海外 -> 越南优先、瑞典备用。
+# Apple / OpenAI -> 美国坦帕优先、瑞典备用；其他 AI / TikTok / X / PayPal -> 美国坦帕；YouTube / Google -> 越南优先、瑞典备用；其他海外 -> 越南优先、瑞典备用。
 
 proxy-groups:
   - name: US-Tampa
@@ -38,6 +38,17 @@ proxy-groups:
     max-failed-times: 3
 
   - name: Apple-US
+    type: fallback
+    proxies:
+      - US-Tampa
+      - Sweden
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  - name: OpenAI-US
     type: fallback
     proxies:
       - US-Tampa
@@ -148,11 +159,13 @@ rules:
   - GEOSITE,apple,Apple-US
   - IP-CIDR,17.0.0.0/8,Apple-US,no-resolve
 
-  # AI -> 美国坦帕
-  - DOMAIN-SUFFIX,openai.com,US-Tampa
-  - DOMAIN-SUFFIX,chatgpt.com,US-Tampa
-  - DOMAIN-SUFFIX,oaistatic.com,US-Tampa
-  - DOMAIN-SUFFIX,oaiusercontent.com,US-Tampa
+  # OpenAI / ChatGPT 全家桶 -> 美国坦帕优先，瑞典备用
+  - DOMAIN-SUFFIX,openai.com,OpenAI-US
+  - DOMAIN-SUFFIX,chatgpt.com,OpenAI-US
+  - DOMAIN-SUFFIX,oaistatic.com,OpenAI-US
+  - DOMAIN-SUFFIX,oaiusercontent.com,OpenAI-US
+
+  # 其他 AI -> 美国坦帕
   - DOMAIN-SUFFIX,anthropic.com,US-Tampa
   - DOMAIN-SUFFIX,claude.ai,US-Tampa
   - DOMAIN-SUFFIX,perplexity.ai,US-Tampa
