@@ -98,6 +98,69 @@ rules:
   - AND,((NETWORK,UDP),(DST-PORT,19302)),REJECT
   - AND,((NETWORK,UDP),(DST-PORT,5349)),REJECT
 
+  # Microsoft 全家桶（Office / Microsoft 365 / Outlook / OneDrive / Teams / Windows / Azure / Xbox）
+  # 美国坦帕优先、瑞典备用；放在国内直连和 GEOIP CN 前。
+  - DOMAIN-SUFFIX,microsoft.com,US-Fallback
+  - DOMAIN-SUFFIX,microsoftonline.com,US-Fallback
+  - DOMAIN-SUFFIX,microsoft365.com,US-Fallback
+  - DOMAIN-SUFFIX,office.com,US-Fallback
+  - DOMAIN-SUFFIX,office365.com,US-Fallback
+  - DOMAIN-SUFFIX,office.net,US-Fallback
+  - DOMAIN-SUFFIX,officeapps.live.com,US-Fallback
+  - DOMAIN-SUFFIX,outlook.com,US-Fallback
+  - DOMAIN-SUFFIX,outlook.office.com,US-Fallback
+  - DOMAIN-SUFFIX,outlook.live.com,US-Fallback
+  - DOMAIN-SUFFIX,hotmail.com,US-Fallback
+  - DOMAIN-SUFFIX,live.com,US-Fallback
+  - DOMAIN-SUFFIX,live.net,US-Fallback
+  - DOMAIN-SUFFIX,onedrive.com,US-Fallback
+  - DOMAIN-SUFFIX,1drv.com,US-Fallback
+  - DOMAIN-SUFFIX,sharepoint.com,US-Fallback
+  - DOMAIN-SUFFIX,sharepointonline.com,US-Fallback
+  - DOMAIN-SUFFIX,teams.microsoft.com,US-Fallback
+  - DOMAIN-SUFFIX,teams.live.com,US-Fallback
+  - DOMAIN-SUFFIX,skype.com,US-Fallback
+  - DOMAIN-SUFFIX,skypeassets.com,US-Fallback
+  - DOMAIN-SUFFIX,windows.com,US-Fallback
+  - DOMAIN-SUFFIX,windows.net,US-Fallback
+  - DOMAIN-SUFFIX,windowsupdate.com,US-Fallback
+  - DOMAIN-SUFFIX,update.microsoft.com,US-Fallback
+  - DOMAIN-SUFFIX,download.windowsupdate.com,US-Fallback
+  - DOMAIN-SUFFIX,msftconnecttest.com,US-Fallback
+  - DOMAIN-SUFFIX,msftncsi.com,US-Fallback
+  - DOMAIN-SUFFIX,microsoftedge.com,US-Fallback
+  - DOMAIN-SUFFIX,microsoftusercontent.com,US-Fallback
+  - DOMAIN-SUFFIX,bing.com,US-Fallback
+  - DOMAIN-SUFFIX,bing.net,US-Fallback
+  - DOMAIN-SUFFIX,msn.com,US-Fallback
+  - DOMAIN-SUFFIX,azure.com,US-Fallback
+  - DOMAIN-SUFFIX,azure.net,US-Fallback
+  - DOMAIN-SUFFIX,azureedge.net,US-Fallback
+  - DOMAIN-SUFFIX,azurewebsites.net,US-Fallback
+  - DOMAIN-SUFFIX,azurefd.net,US-Fallback
+  - DOMAIN-SUFFIX,azurestaticapps.net,US-Fallback
+  - DOMAIN-SUFFIX,visualstudio.com,US-Fallback
+  - DOMAIN-SUFFIX,visualstudio.microsoft.com,US-Fallback
+  - DOMAIN-SUFFIX,vscode.dev,US-Fallback
+  - DOMAIN-SUFFIX,vscode-cdn.net,US-Fallback
+  - DOMAIN-SUFFIX,xbox.com,US-Fallback
+  - DOMAIN-SUFFIX,xboxlive.com,US-Fallback
+  - DOMAIN-SUFFIX,xboxservices.com,US-Fallback
+  - DOMAIN-SUFFIX,gamepass.com,US-Fallback
+  - DOMAIN-SUFFIX,microsoftstore.com,US-Fallback
+  - DOMAIN-SUFFIX,s-microsoft.com,US-Fallback
+  - DOMAIN-SUFFIX,msauth.net,US-Fallback
+  - DOMAIN-SUFFIX,msauthimages.net,US-Fallback
+  - DOMAIN-SUFFIX,msftauth.net,US-Fallback
+  - DOMAIN-SUFFIX,msftidentity.com,US-Fallback
+  - DOMAIN-SUFFIX,microsoftgraph.com,US-Fallback
+  - DOMAIN-SUFFIX,graph.microsoft.com,US-Fallback
+  - DOMAIN-SUFFIX,login.microsoftonline.com,US-Fallback
+  - DOMAIN-SUFFIX,login.live.com,US-Fallback
+  - DOMAIN-SUFFIX,account.microsoft.com,US-Fallback
+  - DOMAIN-SUFFIX,copilot.microsoft.com,US-Fallback
+  - DOMAIN-SUFFIX,githubcopilot.com,US-Fallback
+
   # 王者荣耀 / 腾讯 / 微信 / QQ
   - GEOSITE,tencent,DIRECT
 
