@@ -68,3 +68,13 @@ V1 默认关闭 IPv6，用于减少排查 DNS/路由问题时的变量。确认 
 - 适用：支持 Mihomo 配置覆写/合并的 iOS Clash 客户端；**不是 Shadowrocket 的 .conf 文件**。
 - **注意**：该文件仅包含 `proxy-groups`、`rules`、`rule-providers`，**不含节点、订阅、DNS/TUN 基础配置**。应结合现有节点订阅和客户端提供的覆写/合并方式使用，不可当完整独立配置直接替换现有订阅。
 - 更新前请备份客户端当前配置；实际兼容性仍需在客户端验证，尤其是远程 MRS 下载、节点筛选与策略组加载。
+
+## iOS Clash / Mihomo v2 稳定增强版（推荐测试）
+
+- v2 配置：[`clash/ios-mihomo-watson-v2.yaml`](clash/ios-mihomo-watson-v2.yaml)
+- Raw 地址：`https://raw.githubusercontent.com/lqqfastboot/Shadowrocket-Watson-Rules/main/clash/ios-mihomo-watson-v2.yaml`
+- v1 备份：[`clash/ios-mihomo-watson.yaml`](clash/ios-mihomo-watson.yaml)，不覆盖原文件。
+- v2 修正 v1 Global-Fallback 合并行错误，新增 `🇺🇸🇸🇪 US-SE-Strict`（仅美/瑞）并保留 `🇺🇸🇸🇪 US-SE-Fallback`（可转全球备用）。GPT、Apple、iCloud、Apple Intelligence、Microsoft、OneDrive、Google、Gemini、GitHub 默认优先严格组。
+- OneDrive 规则优先于 Microsoft 通用规则；Apple Push 默认 DIRECT、手动可切换 APNs-Fallback；解除全局 DNS/DoH/DoT 拦截以降低误伤，DNS 防泄漏需单独在客户端 DNS/TUN 层验证；地区组采用延迟测速的 lazy 模式。
+- 已加入 [GitHub Actions 静态校验](.github/workflows/validate-mihomo.yaml)，检查 YAML、策略组与规则集引用。**静态通过不等于 Mihomo 内核加载成功，也不等于远程规则 URL 可用。**
+- **重要**：v1/v2 均是规则覆写模板，**不含代理节点、订阅凭据和完整 DNS/TUN**。需使用支持合并的客户端功能，不要覆盖完整订阅。导入前先从手机备份现用配置，实际验证 Apple Push、iCloud、OpenAI 登录和 OneDrive 同步。
