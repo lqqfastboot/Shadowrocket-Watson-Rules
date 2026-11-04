@@ -78,3 +78,13 @@ V1 默认关闭 IPv6，用于减少排查 DNS/路由问题时的变量。确认 
 - OneDrive 规则优先于 Microsoft 通用规则；Apple Push 默认 DIRECT、手动可切换 APNs-Fallback；解除全局 DNS/DoH/DoT 拦截以降低误伤，DNS 防泄漏需单独在客户端 DNS/TUN 层验证；地区组采用延迟测速的 lazy 模式。
 - 已加入 [GitHub Actions 静态校验](.github/workflows/validate-mihomo.yaml)，检查 YAML、策略组与规则集引用。**静态通过不等于 Mihomo 内核加载成功，也不等于远程规则 URL 可用。**
 - **重要**：v1/v2 均是规则覆写模板，**不含代理节点、订阅凭据和完整 DNS/TUN**。需使用支持合并的客户端功能，不要覆盖完整订阅。导入前先从手机备份现用配置，实际验证 Apple Push、iCloud、OpenAI 登录和 OneDrive 同步。
+
+## iOS Clash v3 精简美化版（常用首页）
+
+- [v3 配置](clash/ios-mihomo-watson-v3.yaml)
+- Raw：`https://raw.githubusercontent.com/lqqfastboot/Shadowrocket-Watson-Rules/main/clash/ios-mihomo-watson-v3.yaml`
+- 展示顺序：主代理 / Apple Push / 全节点 / 广告拦截 / YouTube、Netflix、Disney+ / GPT、Apple、iCloud、Apple Intelligence、Microsoft、OneDrive、Google、Gemini、GitHub。
+- 保留全部 70 个策略组和 276 条分流规则；16 个常用组显示在顶部，其余 54 个辅助组设置 `hidden: true`（仅客户端前端支持时才会真正隐藏）。
+- 不更改 v2 的策略组名称及分流目标；v2 仍独立保留用于回退。GitHub Actions 对 v2 和 v3 都执行 YAML / 引用静态检查。
+- **v3 不是完整节点订阅**；需通过支持 `proxy-groups`、`rules`、`rule-providers` 的合并/覆写机制加载，不能直接替换现有机场订阅。
+- iPhone 初次测试时请检查是否成功隐藏分组、是否正常呈现图标、各服务是否正确分流。图标显示还取决于客户端对 `icon` 的支持和图片 URL 可访问性。
