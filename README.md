@@ -59,3 +59,12 @@ V1 默认关闭 IPv6，用于减少排查 DNS/路由问题时的变量。确认 
 
 - Johnshall/Shadowrocket-ADBlock-Rules-Forever：设计参考
 - blackmatrix7/ios_rule_script：AdvertisingLite 外部广告规则
+
+## iOS Clash / Mihomo 优化版（独立配置）
+
+- 文件：[`clash/ios-mihomo-watson.yaml`](clash/ios-mihomo-watson.yaml)
+- Raw 地址：`https://raw.githubusercontent.com/lqqfastboot/Shadowrocket-Watson-Rules/main/clash/ios-mihomo-watson.yaml`
+- 内容：保留原有服务与地区分组，加入美国优先、瑞典备用的故障转移组；优化 Apple、OpenAI、Microsoft 等规则。
+- 适用：支持 Mihomo 配置覆写/合并的 iOS Clash 客户端；**不是 Shadowrocket 的 .conf 文件**。
+- **注意**：该文件仅包含 `proxy-groups`、`rules`、`rule-providers`，**不含节点、订阅、DNS/TUN 基础配置**。应结合现有节点订阅和客户端提供的覆写/合并方式使用，不可当完整独立配置直接替换现有订阅。
+- 更新前请备份客户端当前配置；实际兼容性仍需在客户端验证，尤其是远程 MRS 下载、节点筛选与策略组加载。
