@@ -22,9 +22,10 @@ jobs:
         shell: bash
         run: |
           python - <<'PY'
-          import glob, re, yaml
+          import yaml
           BUILTINS = {'DIRECT', 'REJECT', 'REJECT-DROP', 'PASS', 'COMPATIBLE'}
-          files = glob.glob('clash/**/*.yaml', recursive=True)
+          # v1 is intentionally kept as an untouched rollback snapshot.
+          files = ['clash/ios-mihomo-watson-v2.yaml']
           assert files, 'No Clash YAML files found'
           for filename in files:
               with open(filename, encoding='utf-8') as f:
