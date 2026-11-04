@@ -811,7 +811,8 @@ proxy-groups:
       - 🇨🇭 CH-Auto
       - 🇵🇱 PL-Auto
       - 🇮🇳 IN-Auto
-      - 🇵🇭 PH-Auto      - 🇻🇳 VN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
       - 🇲🇾 MY-Auto
       - PROXY-Gate
       - DIRECT
