@@ -1,0 +1,54 @@
+name: Validate iOS Mihomo Rules
+
+on:
+  push:
+    paths:
+      - 'clash/**/*.yaml'
+      - '.github/workflows/validate-mihomo.yaml'
+  pull_request:
+    paths:
+      - 'clash/**/*.yaml'
+      - '.github/workflows/validate-mihomo.yaml'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install YAML parser
+        run: python -m pip install --disable-pip-version-check pyyaml
+      - name: Check YAML, groups, referenced providers and routes
+        shell: bash
+        run: |
+          python - <<'PY'
+          import glob, re, yaml
+          BUILTINS = {'DIRECT', 'REJECT', 'REJECT-DROP', 'PASS', 'COMPATIBLE'}
+          files = glob.glob('clash/**/*.yaml', recursive=True)
+          assert files, 'No Clash YAML files found'
+          for filename in files:
+              with open(filename, encoding='utf-8') as f:
+                  src = f.read()
+              cfg = yaml.safe_load(src)
+              assert isinstance(cfg, dict), f'{filename}: root must be a mapping'
+              groups = cfg.get('proxy-groups', [])
+              assert isinstance(groups, list), f'{filename}: proxy-groups must be a list'
+              names = [g['name'] for g in groups]
+              assert len(set(names)) == len(names), f'{filename}: duplicate group names'
+              providers = cfg.get('rule-providers', {})
+              assert isinstance(providers, dict), f'{filename}: rule-providers must be a mapping'
+              known = set(names) | BUILTINS
+              for group in groups:
+                  for target in group.get('proxies', []):
+                      assert isinstance(target, str), f'{filename}: invalid proxy target'
+                      assert '      - ' not in target, f'{filename}: merged proxy item: {target}'
+                      assert target in known, f'{filename}: unresolved group reference {group["name"]} -> {target}'
+              for rule in cfg.get('rules', []):
+                  fields = rule.split(',')
+                  if fields[0] == 'RULE-SET':
+                      assert fields[1] in providers, f'{filename}: unknown RULE-SET {fields[1]}'
+                      assert len(fields) >= 3 and fields[2] in known, f'{filename}: unknown rule target {rule}'
+                  elif fields[0] == 'MATCH':
+                      assert len(fields) >= 2 and fields[1] in known, f'{filename}: unknown MATCH target'
+              print(f'{filename}: PASS ({len(groups)} groups, {len(cfg.get("rules", []))} rules, {len(providers)} providers)')
+          PY
