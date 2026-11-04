@@ -25,7 +25,7 @@ jobs:
           import yaml
           BUILTINS = {'DIRECT', 'REJECT', 'REJECT-DROP', 'PASS', 'COMPATIBLE'}
           # v1 is intentionally kept as an untouched rollback snapshot.
-          files = ['clash/ios-mihomo-watson-v2.yaml']
+          files = ['clash/ios-mihomo-watson-v2.yaml', 'clash/ios-mihomo-watson-v3.yaml']
           assert files, 'No Clash YAML files found'
           for filename in files:
               with open(filename, encoding='utf-8') as f:
