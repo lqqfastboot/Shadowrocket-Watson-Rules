@@ -1,0 +1,2331 @@
+# ============================================================
+# Watson · iOS Mihomo v2 稳定增强版
+# 分组结构 1:1 复刻 kiki-rgb-00/kiki 的 JS/Whisper.js
+# 规则 = 保留原始 RULE-SET 体系；针对 iOS Mihomo 分流进行兼容性调整
+#
+# 说明：
+# - 地区 Auto 组用 filter 正则自动筛选节点，该地区有节点即自动填充
+# - 服务组 select 类型，可选：All-Nodes / Global-Fallback / 各地区 Auto / PROXY-Gate / DIRECT
+# ============================================================
+
+# v2 (2026-11-05) 变更：修复故障转移错误引用；双地区严格策略；
+# DNS/DoH 兼容优先；Apple Push 默认直连；OneDrive 优先；闲置测速 lazy。
+# 原版 v1 保持在 clash/ios-mihomo-watson.yaml，未覆盖。
+#
+# 2026-11-04 v1 历史说明：
+# 1. 原版备份：CLASH_原始备份_2026-11-04.yaml，未做任何改动。
+# 2. 新增“🇺🇸🇸🇪 US-SE-Fallback”：美国优先、瑞典备用，最后使用原全球备用组兜底。
+# 3. 为各服务 select 组增加上述组为第一默认选项；用户已有历史选项可能不会自动重置。
+# 4. Apple、iCloud、Apple Push 的规则顺序优化；MicrosoftCN 由直连改为 Microsoft。
+# 5. 移除一刀切 UDP/443、STUN/TURN、全局 IPv6 拒绝以及宽泛 OpenAI ASN 匹配。
+# 6. 保留原有广告/DoH 规则；若应用受影响，建议优先查看连接日志定位命中规则。
+# 7. 这是覆写/合并模板，不包含实际代理节点与 DNS/TUN 设置，不应直接当完整订阅使用。
+# ============================================================
+
+proxy-groups:
+  # 严格双地区：不会退回其他国家；适合需要稳定出口地区的账户服务
+  - name: 🇺🇸🇸🇪 US-SE-Strict
+    type: fallback
+    proxies:
+      - 🇺🇸 US-Auto
+      - 🇸🇪 SE-Auto
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    lazy: true
+
+  # ---- 美国优先，瑞典备用：测速只表示节点可达，不保证对应业务可访问 ----
+  - name: 🇺🇸🇸🇪 US-SE-Fallback
+    type: fallback
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Available_1.png
+    proxies:
+      - 🇺🇸 US-Auto
+      - 🇸🇪 SE-Auto
+      - 🌍 Global-Fallback
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+
+  # ---- 主策略组 ----
+  - name: PROXY-Gate
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Final.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - DIRECT
+
+  - name: Apple Push
+    type: select
+    icon: https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/Ti/applepush.png
+    proxies:
+      - DIRECT
+      - APNs-Fallback
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+
+  - name: 🖥️ All-Nodes
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Server.png
+    include-all: true
+
+  - name: 🛑 广告拦截
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Reject.png
+    proxies:
+      - REJECT
+      - DIRECT
+
+  # ---- 服务组（select 类型，可选 All-Nodes / Global-Fallback / 各地区 Auto / PROXY-Gate / DIRECT）----
+  - name: YouTube
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/YouTube.png
+    proxies: 
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+
+  - name: Netflix
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Netflix.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Disney+
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Disney+.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: HBO
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/HBO.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: PrimeVideo
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Prime_Video.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Hulu
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Hulu.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Bahamut
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Bahamut.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Abema
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/AbemaTV.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Niconico
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/niconico.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Vimeo
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Vimeo.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Dailymotion
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Streaming.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: SoundCloud
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Music_Enhance.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Deezer
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/deezer.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Tidal
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/TIDAL.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Emby
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Emby.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Spotify
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Spotify.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: TikTok
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/TikTok.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Twitch
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Twitch.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: GPT
+    type: select
+    icon: https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/Ti/ChatGPT.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Strict
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Gemini
+    type: select
+    icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/google-gemini.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Strict
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Claude
+    type: select
+    icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/anthropic.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Grok
+    type: select
+    icon: https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/Grok.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Meta
+    type: select
+    icon: https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/Ti/Meta.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: WhatsApp
+    type: select
+    icon: https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/Ti/WhatsApp.svg
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Telegram
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Telegram.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: LINE
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Line.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Microsoft
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Microsoft.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Strict
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: OneDrive
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/OneDrive.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Strict
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Google
+    type: select
+    icon: https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/Ti/Google.PNG
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Strict
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Apple
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Apple_2.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Strict
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: iCloud
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/iCloud.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Strict
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: AppleTV
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Apple_TV_Plus.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: AppleIntelligence
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Spark.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Strict
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Amazon
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Amazon.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: X
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/X.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Github
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/GitHub.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Strict
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+  - name: Speedtest
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Speedtest.png
+    proxies:
+      - 🇺🇸🇸🇪 US-SE-Fallback
+      - 🖥️ All-Nodes
+      - 🌍 Global-Fallback
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+      - PROXY-Gate
+      - DIRECT
+
+  # ---- 地区 Auto 组（filter 自动筛选节点）----
+  - name: 🇺🇸 US-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[US\]|^US$|USA|United[ _-]?States|\bUS\b|美国|美國|🇺🇸)'
+    url: https://www.gstatic.com/generate_204
+    interval: 600
+    tolerance: 50
+    lazy: true
+  - name: 🇸🇬 SG-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[SG\]|^SG$|Singapore|\bSG\b|新加坡|狮城|🇸🇬)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇭🇰 HK-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[HK\]|^HK$|Hong[ _-]?Kong|\bHK\b|香港|🇭🇰)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇲🇴 MO-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[MO\]|^MO$|Macau|Macao|\bMO\b|澳门|澳門|🇲🇴)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇯🇵 JP-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[JP\]|^JP$|Japan|\bJP\b|日本|东京|大阪|🇯🇵)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇹🇼 TW-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[TW\]|^TW$|Taiwan|Taibei|Taipei|\bTW\b|台湾|臺灣|台北|高雄|🇹🇼)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇬🇧 UK-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[UK\]|^UK$|United[ _-]?Kingdom|Britain|England|\bUK\b|英国|英國|伦敦|🇬🇧)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇩🇪 DE-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[DE\]|^DE$|Germany|Deutschland|\bDE\b|德国|德國|法兰克福|🇩🇪)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇫🇷 FR-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[FR\]|^FR$|France|\bFR\b|法国|法國|巴黎|🇫🇷)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇷🇺 RU-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[RU\]|^RU$|Russia|Russian[ _-]?Federation|\bRU\b|俄罗斯|俄羅斯|莫斯科|伯力|🇷🇺)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇨🇦 CA-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[CA\]|^CA$|Canada|\bCA\b|加拿大|🇨🇦)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇦🇺 AU-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[AU\]|^AU$|Australia|\bAU\b|澳大利亚|澳洲|澳大利亞|🇦🇺)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇰🇷 KR-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[KR\]|^KR$|Korea|South[ _-]?Korea|\bKR\b|韩国|韓國|首尔|首爾|🇰🇷)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇮🇹 IT-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[IT\]|^IT$|Italy|Italian|\bIT\b|意大利|義大利|米兰|米蘭|罗马|羅馬|🇮🇹)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇪🇸 ES-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[ES\]|^ES$|Spain|Spanish|\bES\b|西班牙|马德里|馬德里|🇪🇸)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇳🇱 NL-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[NL\]|^NL$|Netherlands|Dutch|\bNL\b|荷兰|荷蘭|阿姆斯特丹|🇳🇱)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇫🇮 FI-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[FI\]|^FI$|Finland|Finnish|\bFI\b|芬兰|芬蘭|赫尔辛基|赫爾辛基|🇫🇮)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇳🇴 NO-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[NO\]|^NO$|Norway|Norwegian|\bNO\b|挪威|奥斯陆|奧斯陸|🇳🇴)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇸🇪 SE-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[SE\]|^SE$|Sweden|Swedish|\bSE\b|瑞典|斯德哥尔摩|斯德哥爾摩|🇸🇪)'
+    url: https://www.gstatic.com/generate_204
+    interval: 600
+    tolerance: 50
+    lazy: true
+  - name: 🇨🇭 CH-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[CH\]|^CH$|Switzerland|Swiss|\bCH\b|瑞士|苏黎世|蘇黎世|日内瓦|日內瓦|🇨🇭)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇵🇱 PL-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[PL\]|^PL$|Poland|Polish|\bPL\b|波兰|波蘭|华沙|華沙|🇵🇱)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇮🇳 IN-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[IN\]|^IN$|India|Indian|\bIN\b|印度|🇮🇳)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇵🇭 PH-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[PH\]|^PH$|Philippines|Filipino|\bPH\b|菲律宾|菲律賓|马尼拉|馬尼拉|🇵🇭)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇻🇳 VN-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[VN\]|^VN$|Vietnam|Vietnamese|\bVN\b|越南|河内|河內|胡志明|🇻🇳)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+  - name: 🇲🇾 MY-Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    include-all: true
+    filter: '(?i)(\[MY\]|^MY$|Malaysia|Malaysian|\bMY\b|马来西亚|馬來西亞|吉隆坡|🇲🇾)'
+    url: https://www.gstatic.com/generate_204
+    interval: 900
+    tolerance: 50
+    lazy: true
+
+  # ---- 兜底组（APNs / Global Fallback）----
+  - name: APNs-Fallback
+    type: fallback
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Available_1.png
+    proxies: 
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+
+  - name: 🌍 Global-Fallback
+    type: fallback
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Available_1.png
+    proxies:
+      - 🇺🇸 US-Auto
+      - 🇸🇬 SG-Auto
+      - 🇭🇰 HK-Auto
+      - 🇲🇴 MO-Auto
+      - 🇯🇵 JP-Auto
+      - 🇹🇼 TW-Auto
+      - 🇬🇧 UK-Auto
+      - 🇩🇪 DE-Auto
+      - 🇫🇷 FR-Auto
+      - 🇷🇺 RU-Auto
+      - 🇨🇦 CA-Auto
+      - 🇦🇺 AU-Auto
+      - 🇰🇷 KR-Auto
+      - 🇮🇹 IT-Auto
+      - 🇪🇸 ES-Auto
+      - 🇳🇱 NL-Auto
+      - 🇫🇮 FI-Auto
+      - 🇳🇴 NO-Auto
+      - 🇸🇪 SE-Auto
+      - 🇨🇭 CH-Auto
+      - 🇵🇱 PL-Auto
+      - 🇮🇳 IN-Auto
+      - 🇵🇭 PH-Auto
+      - 🇻🇳 VN-Auto
+      - 🇲🇾 MY-Auto
+    url: https://www.gstatic.com/generate_204
+    interval: 600
+
+rules:
+  # ===== 局域网 / 私网 =====
+  - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+  - IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
+  - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
+  - GEOIP,LAN,DIRECT,no-resolve
+  - RULE-SET,private_ip,DIRECT,no-resolve
+  - RULE-SET,private_domain,DIRECT
+  - DOMAIN-SUFFIX,local,DIRECT
+  - DOMAIN-SUFFIX,localhost,DIRECT
+
+  # ===== 机场订阅 / 官网 =====
+  - DOMAIN,thaibuy.cc,PROXY-Gate
+  - DOMAIN,www.thaibuy.cc,PROXY-Gate
+  - DOMAIN,ww2.thaibuy.cc,PROXY-Gate
+  - DOMAIN,www.xiaobaituvpn.com,DIRECT
+  - DOMAIN,vs8.thaibuy.cc,DIRECT
+  - DOMAIN,ww8.thaibuy.cc,DIRECT
+  - DOMAIN,ww.thaibuy.cc,DIRECT
+  - DOMAIN,my.thaibuy.cc,DIRECT
+
+  # ===== QUIC 443 阻断（非国内）=====
+
+  # ===== 广告 / 隐私 =====
+  # 不全局阻断第三方 DNS/DoH/DoT；如需防泄漏，应通过实际 DNS/TUN 设置与日志验证。
+  # 保留广告域名集拦截，不将正常 DNS 请求误当广告。
+  - RULE-SET,ads_domain,🛑 广告拦截
+
+  # ===== STUN / TURN =====
+
+  # ===== BT / PT =====
+  - RULE-SET,bittorrent_domain,DIRECT
+  - DST-PORT,6881-6999,DIRECT
+  - DST-PORT,51413,DIRECT
+
+  # ===== 邮件端口 =====
+  - DST-PORT,25,DIRECT
+  - DST-PORT,465,DIRECT
+  - DST-PORT,587,DIRECT
+  - DST-PORT,2525,DIRECT
+
+  # ===== PikPak =====
+  - DOMAIN,access.pikpakdrive.com,REJECT
+  - DOMAIN,access.mypikpak.com,REJECT
+  - DOMAIN,access.mypikpak.net,REJECT
+  - DOMAIN,access.pikpak.me,REJECT
+  - DOMAIN-KEYWORD,dl-a10b-,DIRECT
+  - DOMAIN-KEYWORD,dl-z01a-,DIRECT
+  - DOMAIN-REGEX,^dl-[A-Za-z0-9-]+\.mypikpak\.com$,DIRECT
+
+  # ===== 国内大厂直连 =====
+  - DOMAIN-SUFFIX,qq.com,DIRECT
+  - DOMAIN-SUFFIX,tencent.com,DIRECT
+  - DOMAIN-SUFFIX,tencent-cloud.com,DIRECT
+  - DOMAIN-SUFFIX,qcloud.com,DIRECT
+  - DOMAIN-SUFFIX,myqcloud.com,DIRECT
+  - DOMAIN-SUFFIX,tencentcos.com,DIRECT
+  - DOMAIN-SUFFIX,gtimg.com,DIRECT
+  - DOMAIN-SUFFIX,gtimg.cn,DIRECT
+  - DOMAIN-SUFFIX,qpic.cn,DIRECT
+  - DOMAIN-SUFFIX,qlogo.cn,DIRECT
+  - DOMAIN-SUFFIX,url.cn,DIRECT
+  - DOMAIN-SUFFIX,weixin.com,DIRECT
+  - DOMAIN-SUFFIX,weixinbridge.com,DIRECT
+  - DOMAIN-SUFFIX,wechat.com,DIRECT
+  - DOMAIN-SUFFIX,servicewechat.com,DIRECT
+  - DOMAIN-SUFFIX,tenpay.com,DIRECT
+  - DOMAIN-SUFFIX,qqmail.com,DIRECT
+  - DOMAIN-SUFFIX,foxmail.com,DIRECT
+  - DOMAIN-SUFFIX,pstatp.com,DIRECT
+  - DOMAIN-SUFFIX,byteimg.com,DIRECT
+  - DOMAIN-SUFFIX,bytedance.com,DIRECT
+  - DOMAIN-SUFFIX,douyin.com,DIRECT
+  - DOMAIN-SUFFIX,aliyuncs.com,DIRECT
+  - DOMAIN-SUFFIX,myhuaweicloud.com,DIRECT
+  - DOMAIN-SUFFIX,mi.com,DIRECT
+  - DOMAIN-SUFFIX,xiaomi.com,DIRECT
+  - DOMAIN-SUFFIX,weibo.com,DIRECT
+  - DOMAIN-SUFFIX,hao123.com,DIRECT
+  - DOMAIN-SUFFIX,qtlglb.com,DIRECT
+  - RULE-SET,socialcn_domain,DIRECT
+  - DOMAIN-SUFFIX,push.apple.com,Apple Push
+  - DOMAIN-SUFFIX,push-apple.com.akadns.net,Apple Push
+  - DOMAIN-KEYWORD,apple.com.edgekey.net,Apple Push
+  - RULE-SET,apns_domain,Apple Push
+  - RULE-SET,apns_ip,Apple Push,no-resolve
+  - IP-CIDR,17.249.0.0/16,Apple Push,no-resolve
+  - IP-CIDR,17.252.0.0/16,Apple Push,no-resolve
+  - IP-CIDR,17.57.144.0/22,Apple Push,no-resolve
+  - IP-CIDR,17.188.128.0/18,Apple Push,no-resolve
+  - IP-CIDR,17.188.20.0/23,Apple Push,no-resolve
+  - IP-CIDR6,2620:149:a44::/48,Apple Push,no-resolve
+  - IP-CIDR6,2403:300:a42::/48,Apple Push,no-resolve
+  - IP-CIDR6,2403:300:a51::/48,Apple Push,no-resolve
+  - IP-CIDR6,2a01:b740:a42::/48,Apple Push,no-resolve
+  # iCloud 专项优先于 Apple 通用域名规则
+  - RULE-SET,iCloud,iCloud
+  - DOMAIN,mask.icloud.com,iCloud
+  - DOMAIN,mask-h2.icloud.com,iCloud
+  - DOMAIN,mask-api.icloud.com,iCloud
+  - DOMAIN,probe.icloud.com,iCloud
+  - DOMAIN,pong.icloud.com,iCloud
+  - DOMAIN,metrics.icloud.com,iCloud
+  - DOMAIN-SUFFIX,apple-dns.net,iCloud
+  - DOMAIN-KEYWORD,icloud.com.akadns.net,iCloud
+  - RULE-SET,applecn_domain,Apple
+  - RULE-SET,onedrive_domain,OneDrive
+  - RULE-SET,MicrosoftCN,Microsoft
+  - RULE-SET,aicn_domain,DIRECT
+  - RULE-SET,mediacn_domain,DIRECT
+
+  # ===== Apple Push（必须在 Apple / iCloud 之前）=====
+
+  # ===== 加密货币 =====
+  - DOMAIN-SUFFIX,aicoin.com,PROXY-Gate
+  - DOMAIN-SUFFIX,coinbase.com,PROXY-Gate
+  - DOMAIN-SUFFIX,binance.com,PROXY-Gate
+  - DOMAIN-SUFFIX,kraken.com,PROXY-Gate
+  - DOMAIN-SUFFIX,crypto.com,PROXY-Gate
+  - DOMAIN-SUFFIX,okx.com,PROXY-Gate
+  - DOMAIN-SUFFIX,bybit.com,PROXY-Gate
+  - DOMAIN-SUFFIX,bitget.com,PROXY-Gate
+  - DOMAIN-SUFFIX,metamask.io,PROXY-Gate
+  - DOMAIN-SUFFIX,phantom.com,PROXY-Gate
+  - DOMAIN-SUFFIX,trustwallet.com,PROXY-Gate
+  - DOMAIN-SUFFIX,ledger.com,PROXY-Gate
+
+  # ===== 视频 / 流媒体 =====
+  - RULE-SET,youtube_domain,YouTube
+  - DOMAIN-SUFFIX,youtu.be,YouTube
+  - DOMAIN-SUFFIX,googlevideo.com,YouTube
+  - DOMAIN-SUFFIX,ggpht.com,YouTube
+  - DOMAIN-SUFFIX,ytimg.com,YouTube
+  - RULE-SET,netflix_domain,Netflix
+  - RULE-SET,Netflix-IP,Netflix,no-resolve
+  - DOMAIN-KEYWORD,netflixdnstest,Netflix
+  - RULE-SET,disney_domain,Disney+
+  - DOMAIN-SUFFIX,disneyplus.com,Disney+
+  - DOMAIN-SUFFIX,dssott.com,Disney+
+  - DOMAIN-SUFFIX,bamgrid.com,Disney+
+  - RULE-SET,hbo_domain,HBO
+  - RULE-SET,primevideo_domain,PrimeVideo
+  - RULE-SET,hulu_domain,Hulu
+  - RULE-SET,bahamut_domain,Bahamut
+  - RULE-SET,abema_domain,Abema
+  - RULE-SET,niconico_domain,Niconico
+  - RULE-SET,vimeo_domain,Vimeo
+  - RULE-SET,dailymotion_domain,Dailymotion
+  - RULE-SET,soundcloud_domain,SoundCloud
+  - RULE-SET,deezer_domain,Deezer
+  - RULE-SET,tidal_domain,Tidal
+  - RULE-SET,spotify_domain,Spotify
+  - RULE-SET,tiktok_domain,TikTok
+  - RULE-SET,twitch_domain,Twitch
+  - DOMAIN-SUFFIX,twitchcdn.net,Twitch
+  - DOMAIN-SUFFIX,jtvnw.net,Twitch
+  - RULE-SET,Emby,Emby
+  - RULE-SET,appletvplus_domain,AppleTV
+  - RULE-SET,appleintelligence_domain,AppleIntelligence
+
+  # ===== AI =====
+  - DOMAIN-SUFFIX,gemini.google.com,Gemini
+  - DOMAIN-SUFFIX,aistudio.google.com,Gemini
+  - DOMAIN-SUFFIX,deepmind.com,Gemini
+  - DOMAIN-SUFFIX,deepmind.google,Gemini
+  - DOMAIN-SUFFIX,gemini.googleusercontent.com,Gemini
+  - DOMAIN-SUFFIX,makersuite.google.com,Gemini
+  - DOMAIN-SUFFIX,claude.ai,Claude
+  - DOMAIN-SUFFIX,anthropic.com,Claude
+  - DOMAIN-SUFFIX,claudeusercontent.com,Claude
+  - DOMAIN-SUFFIX,grok.com,Grok
+  - DOMAIN-SUFFIX,x.ai,Grok
+  - DOMAIN-KEYWORD,grok,Grok
+  - RULE-SET,OpenAI_Domain,GPT
+  - DOMAIN-SUFFIX,openai.com,GPT
+  - DOMAIN-SUFFIX,chatgpt.com,GPT
+  - DOMAIN-SUFFIX,oaistatic.com,GPT
+  - DOMAIN-SUFFIX,oaiusercontent.com,GPT
+  - DOMAIN,cdn.openaimerge.com,GPT
+  - DOMAIN,setup.auth.openai.com,GPT
+  - DOMAIN,cdn.workos.com,GPT
+  - DOMAIN,forwarder.workos.com,GPT
+  - DOMAIN,images.workoscdn.com,GPT
+  - DOMAIN,workos.imgix.net,GPT
+  - DOMAIN,setup.workos.com,GPT
+  - DOMAIN,ct.sendgrid.net,GPT
+  - DOMAIN,oaistatsig.com,GPT
+  - DOMAIN,rum.browser-intake-datadoghq.com,GPT
+  - DOMAIN,challenges.cloudflare.com,GPT
+
+  # ===== 社交 =====
+  - DOMAIN-SUFFIX,telegram.org,Telegram
+  - DOMAIN-SUFFIX,telegram.me,Telegram
+  - DOMAIN-SUFFIX,t.me,Telegram
+  - DOMAIN-SUFFIX,tdesktop.com,Telegram
+  - DOMAIN-SUFFIX,telegra.ph,Telegram
+  - DOMAIN-SUFFIX,telegram.dog,Telegram
+  - IP-CIDR,91.108.4.0/22,Telegram,no-resolve
+  - IP-CIDR,91.108.8.0/22,Telegram,no-resolve
+  - IP-CIDR,91.108.12.0/22,Telegram,no-resolve
+  - IP-CIDR,91.108.16.0/22,Telegram,no-resolve
+  - IP-CIDR,91.108.20.0/22,Telegram,no-resolve
+  - IP-CIDR,91.108.56.0/22,Telegram,no-resolve
+  - IP-CIDR,149.154.160.0/20,Telegram,no-resolve
+  - IP-CIDR,91.105.192.0/23,Telegram,no-resolve
+  - IP-CIDR,185.76.151.0/24,Telegram,no-resolve
+  - IP-CIDR6,2001:67c:4e8::/48,Telegram,no-resolve
+  - IP-CIDR6,2001:b28:f23c::/48,Telegram,no-resolve
+  - IP-CIDR6,2001:b28:f23d::/48,Telegram,no-resolve
+  - IP-CIDR6,2001:b28:f23f::/48,Telegram,no-resolve
+  - IP-CIDR6,2a0a:f280::/32,Telegram,no-resolve
+  - DOMAIN-SUFFIX,whatsapp.com,WhatsApp
+  - DOMAIN-SUFFIX,whatsapp.net,WhatsApp
+  - DOMAIN-SUFFIX,wa.me,WhatsApp
+  - DOMAIN-SUFFIX,whatsapp.org,WhatsApp
+  - DOMAIN-SUFFIX,whatsapp.biz,WhatsApp
+  - DOMAIN-SUFFIX,whatsapp.info,WhatsApp
+  - DOMAIN-KEYWORD,whatsapp,WhatsApp
+  - DOMAIN,graph.facebook.com,Meta
+  - DOMAIN-SUFFIX,meta.com,Meta
+  - DOMAIN-SUFFIX,facebook.com,Meta
+  - DOMAIN-SUFFIX,facebook.net,Meta
+  - DOMAIN-SUFFIX,fbcdn.net,Meta
+  - DOMAIN-SUFFIX,fbsbx.com,Meta
+  - DOMAIN-SUFFIX,fb.com,Meta
+  - DOMAIN-SUFFIX,facebook-hardware.com,Meta
+  - DOMAIN-SUFFIX,fb.me,Meta
+  - DOMAIN-SUFFIX,fb.gg,Meta
+  - DOMAIN-SUFFIX,graph.instagram.com,Meta
+  - DOMAIN-SUFFIX,fbcdn.com,Meta
+  - DOMAIN-SUFFIX,messengerplatform.com,Meta
+  - DOMAIN-SUFFIX,instagram.com,Meta
+  - DOMAIN-SUFFIX,cdninstagram.com,Meta
+  - DOMAIN-SUFFIX,instagram.net,Meta
+  - DOMAIN-SUFFIX,ig.me,Meta
+  - DOMAIN-SUFFIX,threads.com,Meta
+  - DOMAIN-SUFFIX,threads.net,Meta
+  - DOMAIN-SUFFIX,threadsusercontent.com,Meta
+  - DOMAIN-SUFFIX,messenger.com,Meta
+  - DOMAIN-SUFFIX,m.me,Meta
+  - DOMAIN-SUFFIX,meta.ai,Meta
+  - DOMAIN-SUFFIX,ai.meta.com,Meta
+  - DOMAIN-SUFFIX,muse.ai,Meta
+  - DOMAIN-SUFFIX,metaaivm.com,Meta
+  - RULE-SET,Facebook-IP,Meta,no-resolve
+  - IP-CIDR,157.240.0.0/16,Meta,no-resolve
+  - IP-CIDR,31.13.64.0/18,Meta,no-resolve
+  - IP-CIDR,69.171.224.0/19,Meta,no-resolve
+  - IP-CIDR,173.252.64.0/18,Meta,no-resolve
+  - DOMAIN-SUFFIX,line.me,LINE
+  - DOMAIN-SUFFIX,line-apps.com,LINE
+  - DOMAIN-SUFFIX,line-scdn.net,LINE
+  - DOMAIN-SUFFIX,line.naver.jp,LINE
+  - DOMAIN-SUFFIX,lin.ee,LINE
+  - DOMAIN-SUFFIX,line.biz,LINE
+  - DOMAIN-SUFFIX,linecorp.com,LINE
+  - DOMAIN-SUFFIX,line-website.com,LINE
+  - DOMAIN-SUFFIX,lineblog.me,LINE
+  - DOMAIN-SUFFIX,linetoday.com,LINE
+  - DOMAIN-SUFFIX,x.com,X
+  - DOMAIN-SUFFIX,twitter.com,X
+  - DOMAIN-SUFFIX,t.co,X
+  - DOMAIN-SUFFIX,twimg.com,X
+  - DOMAIN-SUFFIX,tweetdeck.com,X
+  - DOMAIN-SUFFIX,pscp.tv,X
+  - DOMAIN-SUFFIX,periscope.tv,X
+  - DOMAIN-SUFFIX,twtrdns.net,X
+  - RULE-SET,Twitter-IP,X,no-resolve
+
+  # ===== 科技 =====
+  - RULE-SET,google_domain,Google
+  - RULE-SET,googlefcm_domain,Google
+  - RULE-SET,Google-IP,Google,no-resolve
+  - DOMAIN-KEYWORD,google,Google
+  - DOMAIN-SUFFIX,gmail.com,Google
+  - DOMAIN-SUFFIX,googleusercontent.com,Google
+  - DOMAIN-SUFFIX,gstatic.com,Google
+  - DOMAIN-SUFFIX,googleapis.com,Google
+  - RULE-SET,Copilot_Domain,Microsoft
+  - RULE-SET,Copilot_IP,Microsoft,no-resolve
+  - RULE-SET,Microsoft,Microsoft
+  - DOMAIN-SUFFIX,github.com,Github
+  - DOMAIN-SUFFIX,githubusercontent.com,Github
+  - DOMAIN-SUFFIX,githubassets.com,Github
+  - DOMAIN-SUFFIX,raw.githubusercontent.com,Github
+  - DOMAIN-SUFFIX,github.io,Github
+  - DOMAIN-SUFFIX,github.dev,Github
+  - DOMAIN-SUFFIX,githubstatus.com,Github
+  - RULE-SET,Amazon_Domain,Amazon
+  - DOMAIN-SUFFIX,speedtest.net,Speedtest
+  - DOMAIN-SUFFIX,speedtest.com,Speedtest
+  - DOMAIN-SUFFIX,ookla.com,Speedtest
+  - DOMAIN-SUFFIX,ooklaserver.net,Speedtest
+  - DOMAIN-SUFFIX,ookla.net,Speedtest
+  - DOMAIN-SUFFIX,speedtestcustom.com,Speedtest
+
+  # ===== Apple / iCloud =====
+  - RULE-SET,apple_domain,Apple
+  - RULE-SET,Apple-IP,Apple,no-resolve
+
+  # ===== GFW / 其他代理 =====
+  - RULE-SET,gfw_domain,PROXY-Gate
+  - RULE-SET,geolocationnotcn_domain,PROXY-Gate
+
+  # ===== 下载 / 游戏直连 =====
+  - RULE-SET,Trackers,DIRECT
+  - RULE-SET,Trackers-IP,DIRECT,no-resolve
+  - RULE-SET,Xunlei,DIRECT
+  - RULE-SET,GamesCN,DIRECT
+  - DOMAIN-SUFFIX,steamcontent.com,DIRECT
+  - RULE-SET,gamesglobal_domain,DIRECT
+
+  # ===== 国内兜底 =====
+  - RULE-SET,cn_domain,DIRECT
+  - RULE-SET,cn_ip,DIRECT
+
+  # ===== IPv6 =====
+
+  # ===== 最终兜底 =====
+  - MATCH,PROXY-Gate
+
+rule-providers:
+  private_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/private.mrs
+  bittorrent_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-public-tracker.mrs
+  ads_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ads-all.mrs
+  doh_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-doh.mrs
+  youtube_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/youtube.mrs
+  netflix_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/netflix.mrs
+  disney_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/disney.mrs
+  hbo_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://cdn.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/hbo.mrs
+  primevideo_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/primevideo.mrs
+  spotify_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://cdn.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/spotify.mrs
+  tiktok_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/tiktok.mrs
+  twitch_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/twitch.mrs
+  soundcloud_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/soundcloud.mrs
+  vimeo_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/vimeo.mrs
+  dailymotion_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/dailymotion.mrs
+  hulu_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/hulu.mrs
+  bahamut_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/bahamut.mrs
+  abema_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/abema.mrs
+  niconico_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/niconico.mrs
+  deezer_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/deezer.mrs
+  tidal_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/tidal.mrs
+  appletvplus_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/apple-tv.mrs
+  appleintelligence_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/apple-intelligence.mrs
+  applecn_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/apple-cn.mrs
+  apple_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/apple.mrs
+  gfw_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/gfw.mrs
+  geolocationnotcn_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/proxy.mrs
+  cn_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/cn.mrs
+  mediacn_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-media-cn.mrs
+  private_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+    url: https://cdn.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/ipcidr/private.mrs
+  cn_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/ipcidr/cn.mrs
+  DNS-IP:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+    url: https://gcore.jsdelivr.net/gh/Aethersailor/Custom_OpenClash_Rules@main/rule/Encrypted_DNS_IP.mrs
+  Category-DoH:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-doh.mrs
+  HTTPDNS-CN:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-httpdns-cn.mrs
+  MicrosoftCN:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/microsoft-cn.mrs
+  GamesCN:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/games-cn.mrs
+  Trackers:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://ghfast.top/https://github.com/yhlh9982/clash-rules/releases/download/tracker-rules/trackers_domain.mrs
+  Trackers-IP:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+    url: https://ghfast.top/https://github.com/yhlh9982/clash-rules/releases/download/tracker-rules/trackers_ip.mrs
+  Xunlei:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/xunlei.mrs
+  Netflix-IP:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/ipcidr/netflix.mrs
+  Facebook-IP:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+    url: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/facebook.mrs
+  Twitter-IP:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+    url: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/twitter.mrs
+  Google-IP:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/ipcidr/google.mrs
+  Apple-IP:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/ipcidr/apple.mrs
+  aicn_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ai-cn.mrs
+  google_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/google.mrs
+  googlefcm_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://cdn.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/googlefcm.mrs
+  gamesglobal_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/games.mrs
+  apns_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/apns.mrs
+  apns_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/ipcidr/apns.mrs
+  socialcn_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/socialmedia-cn.mrs
+  onedrive_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://fastly.jsdelivr.net/gh/QuixoticHeart/rule-set@ruleset/meta/domain/onedrive.mrs
+  OpenAI_Domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/MRS/OpenAI_Domain.mrs
+  Amazon_Domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/MRS/Amazon_Domain.mrs
+  Copilot_Domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/MRS/Copilot_Domain.mrs
+  Copilot_IP:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+    url: https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/MRS/Copilot_IP.mrs
+  Microsoft:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/MRS/Microsoft.mrs
+  Emby:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/MRS/Emby.mrs
+  iCloud:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/MRS/iCloud.mrs
