@@ -60,6 +60,54 @@ V1 默认关闭 IPv6，用于减少排查 DNS/路由问题时的变量。确认 
 - Johnshall/Shadowrocket-ADBlock-Rules-Forever：设计参考
 - blackmatrix7/ios_rule_script：AdvertisingLite 外部广告规则
 
+## Watson Clash / Mihomo V2.4（最新测试版）
+
+> **适用范围：** 支持 Mihomo 配置合并/覆写的客户端；这是策略组、规则和规则集的**覆写模板**，不是完整机场订阅，也不包含节点、DNS/TUN 基础设置。Shadowrocket 请继续使用上文的 `watson.conf`，不要将 YAML 当作 Shadowrocket 配置导入。
+>
+> **状态：** V2.4 已合入 main；静态引用检查已执行，协议筛选、远程规则下载及 iOS 实机兼容性仍需验证。更新前请备份现有配置。
+
+**[查看 V2.4 配置](clash/ios-mihomo-watson-v2.4.yaml)** · [Raw 直链](https://raw.githubusercontent.com/lqqfastboot/Shadowrocket-Watson-Rules/main/clash/ios-mihomo-watson-v2.4.yaml) · [版本更新记录](CHANGELOG.md)
+
+### 如何使用
+
+1. 在支持 Mihomo 的客户端中先导入并启用你的节点订阅，备份当前可用配置。
+2. 使用客户端支持的**覆写/合并**功能加载 V2.4 YAML；不要用它直接替换完整订阅。
+3. 刷新配置并检查策略组、规则集是否加载；在 `PROXY-Gate` 中手动选择 `🌍 Global-Auto`，才会让**经过 PROXY-Gate 的流量**自动优选。
+4. 检查 YouTube、ChatGPT、Microsoft、Apple Push 等服务的实际路由。服务独立策略组可能覆盖 PROXY-Gate 的选择；客户端保存的历史选择也可能继续生效。
+
+### 策略组速查
+
+| 策略组 | 作用 | 注意 |
+| --- | --- | --- |
+| `🖥️ All-Nodes` | 手动选择具体节点 | 不会因测速更快而自动切换 |
+| `🌍 Global-Auto` | 全节点 HTTP 延迟优选 | 300 秒间隔、10 ms 容差；并非带宽测速 |
+| `🌍 Global-Fallback` | 按列表顺序选择可用节点 | 不是全局最低延迟 |
+| `🇺🇸🇸🇪 US-SE-Strict` | 限定美国/瑞典策略组 | 需核实实际出口地区和空组行为 |
+| `🇺🇸🇸🇪 US-SE-Fallback` | 美国、瑞典、越南及全球备用 | 允许回退至其他地区 |
+| `⚡ TUIC-Auto` | TUIC 协议节点测速优选 | 依赖 Mihomo `exclude-type` 排除其他已知类型 |
+| `⚡ HY2-Auto` | Hysteria2 协议节点测速优选 | 需实测组内节点类型 |
+| `⚡ VLESS-Auto` | VLESS 协议节点测速优选 | 需实测组内节点类型 |
+
+### 常见问题
+
+- **测速最快为什么不是下载最快？** `url-test` 测试的是指定 HTTP 地址的请求延迟，不等于吞吐量、丢包率、视频播放质量或平台解锁能力。
+- **选了 Global-Auto，为什么 ChatGPT 仍使用其他节点？** ChatGPT 可能命中独立的 `GPT` 策略组；请检查该组的选择和实际连接日志。
+- **某个国家显示“无节点”？** 静态地区组使用节点名称正则筛选；未匹配时可能为空。V2.3 起加入 `empty-fallback: REJECT`，但嵌套故障转移及客户端表现仍需测试。
+- **TUIC/HY2/VLESS 组混入其他协议？** 协议组使用 `exclude-type` 排除已知其他类型，并非通用的正向类型过滤。内核新增协议时需要维护排除表。
+- **规则加载失败？** 核对 Mihomo 内核版本、客户端合并模式、MRS 资源可达性及配置日志。静态校验不等于运行成功。
+- **DNS 是否防泄漏？** 本 YAML 不提供完整 DNS/TUN 设置，必须检查客户端最终合成配置及实际解析路径。
+
+### 版本选择
+
+- **V2.1：** 精简 SMTP/BT/PT 端口直连与 Google 泛匹配，优化 PikPak、地区回退和规则依赖。
+- **V2.2：** 新增可选 `Global-Auto`。
+- **V2.3：** 故障转移去重、空组保护与健康检查。
+- **V2.4：** 新增 TUIC/Hysteria2/VLESS 协议自动测速，调整全局测速参数。
+
+以上版本均以独立文件保存；请参阅 [CHANGELOG](CHANGELOG.md)。使用前核对目标文件是否存在及适用的客户端合并模式。
+
+---
+
 ## iOS Clash / Mihomo 优化版（独立配置）
 
 - 文件：[`clash/ios-mihomo-watson.yaml`](clash/ios-mihomo-watson.yaml)
