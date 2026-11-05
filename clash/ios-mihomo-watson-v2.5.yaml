@@ -8,7 +8,7 @@
 # - 服务组 select 类型，可选：All-Nodes / Global-Fallback / 各地区 Auto / PROXY-Gate / DIRECT
 # ============================================================
 
-# v2.5 (2026-11-06)：移除 US-SE-Fallback，原引用统一改为 Global-Auto（包括默认候选）；保留 US-SE-Strict、规则及 DNS/TUN 边界。
+# v2.5 (2026-11-06)：移除 US-SE-Fallback 和 US-SE-Strict，两组原引用统一改为 Global-Auto；规则及 DNS/TUN 边界不变。
 # 注意：不同策略组仍可能有不同出口；本变更不保证 WebRTC 与 HTTPS IP 一致。
 # v2.4 (2026-11-06)：新增按协议 TUIC/Hysteria2/VLESS 自动测速组；Global-Auto 改为低容差快速优选；不改变任何默认分流目标。
 # 协议排除表依赖 Mihomo exclude-type；未来新增协议需更新排除表，实际内核必须验证。
@@ -33,20 +33,6 @@
 # ============================================================
 
 proxy-groups:
-  # 严格双地区：不会退回其他国家；适合需要稳定出口地区的账户服务
-  - name: 🇺🇸🇸🇪 US-SE-Strict
-    type: fallback
-    empty-fallback: REJECT
-    proxies:
-      - 🇺🇸 US-Auto
-      - 🇸🇪 SE-Auto
-    url: https://www.gstatic.com/generate_204
-    interval: 300
-    timeout: 5000
-    expected-status: 204
-    max-failed-times: 3
-    lazy: true
-
   # ---- 主策略组 ----
   - name: PROXY-Gate
     type: select
@@ -743,7 +729,7 @@ proxy-groups:
     type: select
     icon: https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/Ti/ChatGPT.png
     proxies:
-      - 🇺🇸🇸🇪 US-SE-Strict
+      - 🌍 Global-Auto
       - 🖥️ All-Nodes
       - 🌍 Global-Fallback
       - 🌍 Global-Auto
@@ -778,7 +764,7 @@ proxy-groups:
     type: select
     icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/google-gemini.png
     proxies:
-      - 🇺🇸🇸🇪 US-SE-Strict
+      - 🌍 Global-Auto
       - 🖥️ All-Nodes
       - 🌍 Global-Fallback
       - 🌍 Global-Auto
@@ -1023,7 +1009,7 @@ proxy-groups:
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Microsoft.png
     proxies:
-      - 🇺🇸🇸🇪 US-SE-Strict
+      - 🌍 Global-Auto
       - 🖥️ All-Nodes
       - 🌍 Global-Fallback
       - 🌍 Global-Auto
@@ -1058,7 +1044,7 @@ proxy-groups:
     type: select
     icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/OneDrive.png
     proxies:
-      - 🇺🇸🇸🇪 US-SE-Strict
+      - 🌍 Global-Auto
       - 🖥️ All-Nodes
       - 🌍 Global-Fallback
       - 🌍 Global-Auto
@@ -1093,7 +1079,7 @@ proxy-groups:
     type: select
     icon: https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/Ti/Google.PNG
     proxies:
-      - 🇺🇸🇸🇪 US-SE-Strict
+      - 🌍 Global-Auto
       - 🖥️ All-Nodes
       - 🌍 Global-Fallback
       - 🌍 Global-Auto
@@ -1128,7 +1114,7 @@ proxy-groups:
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Apple_2.png
     proxies:
-      - 🇺🇸🇸🇪 US-SE-Strict
+      - 🌍 Global-Auto
       - 🖥️ All-Nodes
       - 🌍 Global-Fallback
       - 🌍 Global-Auto
@@ -1163,7 +1149,7 @@ proxy-groups:
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/iCloud.png
     proxies:
-      - 🇺🇸🇸🇪 US-SE-Strict
+      - 🌍 Global-Auto
       - 🖥️ All-Nodes
       - 🌍 Global-Fallback
       - 🌍 Global-Auto
@@ -1233,7 +1219,7 @@ proxy-groups:
     type: select
     icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Spark.png
     proxies:
-      - 🇺🇸🇸🇪 US-SE-Strict
+      - 🌍 Global-Auto
       - 🖥️ All-Nodes
       - 🌍 Global-Fallback
       - 🌍 Global-Auto
@@ -1338,7 +1324,7 @@ proxy-groups:
     type: select
     icon: https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/GitHub.png
     proxies:
-      - 🇺🇸🇸🇪 US-SE-Strict
+      - 🌍 Global-Auto
       - 🖥️ All-Nodes
       - 🌍 Global-Fallback
       - 🌍 Global-Auto
@@ -1770,7 +1756,7 @@ proxy-groups:
 
   # ---- 可选全节点自动测速：不改变任何服务的默认策略 ----
   # 使用 Mihomo include-all，不接管原有 provider 或 DNS/TUN。
-  # 延迟最小不等于业务可用；AI/账户服务仍推荐 US-SE-Strict。
+  # 延迟最小不等于业务可用；AI/账户服务建议手动固定可信地区节点。
   # tuic 协议独立测速：通过排除其余已知类型实现
   - name: ⚡ TUIC-Auto
     type: url-test
