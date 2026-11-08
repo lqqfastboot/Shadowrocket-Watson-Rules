@@ -81,6 +81,28 @@ proxy-groups:
     timeout: 5000
     max-failed-times: 3
 
+  # X / Twitter 独立可选策略；默认保持美国坦帕优先、瑞典备用
+  - name: X
+    type: select
+    proxies:
+      - US-Fallback
+      - US-Tampa
+      - Sweden
+      - Overseas
+      - Vietnam
+      - DIRECT
+
+  # Meta 全家桶独立可选策略；默认保持美国坦帕优先、瑞典备用
+  - name: Meta
+    type: select
+    proxies:
+      - US-Fallback
+      - US-Tampa
+      - Sweden
+      - Overseas
+      - Vietnam
+      - DIRECT
+
 rules:
   # 局域网 / DLNA / UPnP / mDNS 优先直连
   - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
@@ -244,8 +266,6 @@ rules:
   - DOMAIN-SUFFIX,claude.ai,OpenAI-US
   - DOMAIN-SUFFIX,perplexity.ai,OpenAI-US
   - DOMAIN,gemini.google.com,OpenAI-US
-  - DOMAIN-SUFFIX,meta.ai,OpenAI-US
-  - DOMAIN-SUFFIX,ai.meta.com,OpenAI-US
   - DOMAIN-SUFFIX,llama.com,OpenAI-US
 
   # AI 全家桶扩展 -> 美国坦帕优先，瑞典备用
@@ -259,20 +279,31 @@ rules:
   - DOMAIN-SUFFIX,character.ai,OpenAI-US
   - DOMAIN-SUFFIX,manus.im,OpenAI-US
 
-  # Meta 全家桶 -> 美国坦帕优先，瑞典备用
-  - DOMAIN-SUFFIX,meta.com,US-Fallback
-  - DOMAIN-SUFFIX,facebook.com,US-Fallback
-  - DOMAIN-SUFFIX,facebook.net,US-Fallback
-  - DOMAIN-SUFFIX,fb.com,US-Fallback
-  - DOMAIN-SUFFIX,fbcdn.net,US-Fallback
-  - DOMAIN-SUFFIX,fbsbx.com,US-Fallback
-  - DOMAIN-SUFFIX,messenger.com,US-Fallback
-  - DOMAIN-SUFFIX,instagram.com,US-Fallback
-  - DOMAIN-SUFFIX,cdninstagram.com,US-Fallback
-  - DOMAIN-SUFFIX,threads.net,US-Fallback
-  - DOMAIN-SUFFIX,whatsapp.com,US-Fallback
-  - DOMAIN-SUFFIX,whatsapp.net,US-Fallback
-  - DOMAIN-SUFFIX,oculus.com,US-Fallback
+  # Meta 全家桶 -> 独立 Meta 策略（默认 US-Fallback）
+  - DOMAIN-SUFFIX,meta.com,Meta
+  - DOMAIN-SUFFIX,facebook.com,Meta
+  - DOMAIN-SUFFIX,facebook.net,Meta
+  - DOMAIN-SUFFIX,fb.com,Meta
+  - DOMAIN-SUFFIX,fb.me,Meta
+  - DOMAIN-SUFFIX,fbcdn.net,Meta
+  - DOMAIN-SUFFIX,fbcdn.com,Meta
+  - DOMAIN-SUFFIX,fbsbx.com,Meta
+  - DOMAIN-SUFFIX,messenger.com,Meta
+  - DOMAIN-SUFFIX,m.me,Meta
+  - DOMAIN-SUFFIX,instagram.com,Meta
+  - DOMAIN-SUFFIX,instagram.net,Meta
+  - DOMAIN-SUFFIX,cdninstagram.com,Meta
+  - DOMAIN-SUFFIX,ig.me,Meta
+  - DOMAIN-SUFFIX,threads.com,Meta
+  - DOMAIN-SUFFIX,threads.net,Meta
+  - DOMAIN-SUFFIX,threadsusercontent.com,Meta
+  - DOMAIN-SUFFIX,whatsapp.com,Meta
+  - DOMAIN-SUFFIX,whatsapp.net,Meta
+  - DOMAIN-SUFFIX,wa.me,Meta
+  - DOMAIN-SUFFIX,oculus.com,Meta
+  - DOMAIN-SUFFIX,oculuscdn.com,Meta
+  - DOMAIN-SUFFIX,meta.ai,Meta
+  - DOMAIN-SUFFIX,ai.meta.com,Meta
 
   # PayPal -> 美国坦帕优先，瑞典备用
   - DOMAIN-SUFFIX,paypal.com,US-Fallback
@@ -281,11 +312,16 @@ rules:
   # TikTok -> 美国坦帕优先，瑞典备用
   - GEOSITE,tiktok,US-Fallback
 
-  # X / Twitter -> 美国坦帕优先，瑞典备用
-  - DOMAIN-SUFFIX,x.com,US-Fallback
-  - DOMAIN-SUFFIX,twitter.com,US-Fallback
-  - DOMAIN-SUFFIX,twimg.com,US-Fallback
-  - DOMAIN-SUFFIX,t.co,US-Fallback
+  # X / Twitter -> 独立 X 策略（默认 US-Fallback）
+  - DOMAIN-SUFFIX,x.com,X
+  - DOMAIN-SUFFIX,twitter.com,X
+  - DOMAIN-SUFFIX,twimg.com,X
+  - DOMAIN-SUFFIX,t.co,X
+  - DOMAIN-SUFFIX,tweetdeck.com,X
+  - DOMAIN-SUFFIX,twitter.net,X
+  - DOMAIN-SUFFIX,twtrdns.net,X
+  - DOMAIN-SUFFIX,pscp.tv,X
+  - DOMAIN-SUFFIX,periscope.tv,X
 
   # YouTube -> 越南优先、瑞典备用（必须位于 Google 前）
   - GEOSITE,youtube,Overseas
