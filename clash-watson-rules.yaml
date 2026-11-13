@@ -121,6 +121,8 @@ rules:
   - AND,((NETWORK,UDP),(DST-PORT,5349)),REJECT
 
   # wczhsw.com 及其子域名强制直连（优先于海外分流）
+  # 智慧水务缴费网站精确域名直连
+  - DOMAIN,smartwater.wczhsw.com,DIRECT
   - DOMAIN-SUFFIX,wczhsw.com,DIRECT
 
   # Microsoft 全家桶（Office / Microsoft 365 / Outlook / OneDrive / Teams / Windows / Azure / Xbox）
