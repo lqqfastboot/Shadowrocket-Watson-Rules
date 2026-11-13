@@ -120,6 +120,9 @@ rules:
   - AND,((NETWORK,UDP),(DST-PORT,19302)),REJECT
   - AND,((NETWORK,UDP),(DST-PORT,5349)),REJECT
 
+  # wczhsw.com 及其子域名强制直连（优先于海外分流）
+  - DOMAIN-SUFFIX,wczhsw.com,DIRECT
+
   # Microsoft 全家桶（Office / Microsoft 365 / Outlook / OneDrive / Teams / Windows / Azure / Xbox）
   # 美国坦帕优先、瑞典备用；放在国内直连和 GEOIP CN 前。
   - DOMAIN-SUFFIX,microsoft.com,US-Fallback
