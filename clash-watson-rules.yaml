@@ -27,6 +27,356 @@ proxy-groups:
     timeout: 5000
     max-failed-times: 3
 
+  # 美国其他地区节点（排除坦帕），作为 US-Tampa 的备用
+  - name: US-Other
+    type: url-test
+    include-all: true
+    filter: '(?i)^(?!.*(?:Tampa|坦帕|Florida.*Tampa))(?=.*(?:美国|United States|USA|US[-_ ]|🇺🇸|Los Angeles|New York|Seattle|San Jose|洛杉矶|纽约|西雅图|圣何塞)).*    type: url-test
+    include-all: true
+    filter: '(?i)(越南胡志明|Vietnam.*HCM|Ho Chi Minh)'
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    tolerance: 50
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  - name: Sweden
+    type: url-test
+    include-all: true
+    filter: '(?i)(瑞典|Sweden)'
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    tolerance: 50
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  - name: US-Fallback
+    type: fallback
+    proxies:
+      - US-Tampa
+      - US-Other
+      - Sweden
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  - name: Apple-US
+    type: fallback
+    proxies:
+      - US-Tampa
+      - US-Other
+      - Sweden
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  - name: OpenAI-US
+    type: fallback
+    proxies:
+      - US-Tampa
+      - US-Other
+      - Sweden
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  - name: Overseas
+    type: fallback
+    proxies:
+      - Vietnam
+      - Sweden
+      - US-All
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  # X / Twitter 独立可选策略；默认保持美国坦帕优先、瑞典备用
+  - name: X
+    type: select
+    proxies:
+      - US-Fallback
+      - US-Tampa
+      - Sweden
+      - Overseas
+      - Vietnam
+      - DIRECT
+
+  # Meta 全家桶独立可选策略；默认保持美国坦帕优先、瑞典备用
+  - name: Meta
+    type: select
+    proxies:
+      - US-Fallback
+      - US-Tampa
+      - Sweden
+      - Overseas
+      - Vietnam
+      - DIRECT
+
+rules:
+  # 局域网 / DLNA / UPnP / mDNS 优先直连
+  - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+  - IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
+  - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,169.254.0.0/16,DIRECT,no-resolve
+  - IP-CIDR,224.0.0.0/4,DIRECT,no-resolve
+  - DOMAIN-SUFFIX,local,DIRECT
+
+  # WebRTC / STUN 防真实 IP 泄漏
+  # 域名命中 STUN 时直接拒绝；端口规则仅限制 UDP，避免误伤 TCP/TURN 回退。
+  - DOMAIN-KEYWORD,stun,REJECT
+  - AND,((NETWORK,UDP),(DST-PORT,3478)),REJECT
+  - AND,((NETWORK,UDP),(DST-PORT,19302)),REJECT
+  - AND,((NETWORK,UDP),(DST-PORT,5349)),REJECT
+
+  # wczhsw.com 及其子域名强制直连（优先于海外分流）
+  - DOMAIN-SUFFIX,wczhsw.com,DIRECT
+
+  # Microsoft 全家桶（Office / Microsoft 365 / Outlook / OneDrive / Teams / Windows / Azure / Xbox）
+  # 美国坦帕优先、瑞典备用；放在国内直连和 GEOIP CN 前。
+  - DOMAIN-SUFFIX,microsoft.com,US-Fallback
+  - DOMAIN-SUFFIX,microsoftonline.com,US-Fallback
+  - DOMAIN-SUFFIX,microsoft365.com,US-Fallback
+  - DOMAIN-SUFFIX,office.com,US-Fallback
+  - DOMAIN-SUFFIX,office365.com,US-Fallback
+  - DOMAIN-SUFFIX,office.net,US-Fallback
+  - DOMAIN-SUFFIX,officeapps.live.com,US-Fallback
+  - DOMAIN-SUFFIX,outlook.com,US-Fallback
+  - DOMAIN-SUFFIX,outlook.office.com,US-Fallback
+  - DOMAIN-SUFFIX,outlook.live.com,US-Fallback
+  - DOMAIN-SUFFIX,hotmail.com,US-Fallback
+  - DOMAIN-SUFFIX,live.com,US-Fallback
+  - DOMAIN-SUFFIX,live.net,US-Fallback
+  - DOMAIN-SUFFIX,onedrive.com,US-Fallback
+  - DOMAIN-SUFFIX,1drv.com,US-Fallback
+  - DOMAIN-SUFFIX,sharepoint.com,US-Fallback
+  - DOMAIN-SUFFIX,sharepointonline.com,US-Fallback
+  - DOMAIN-SUFFIX,teams.microsoft.com,US-Fallback
+  - DOMAIN-SUFFIX,teams.live.com,US-Fallback
+  - DOMAIN-SUFFIX,skype.com,US-Fallback
+  - DOMAIN-SUFFIX,skypeassets.com,US-Fallback
+  - DOMAIN-SUFFIX,windows.com,US-Fallback
+  - DOMAIN-SUFFIX,windows.net,US-Fallback
+  - DOMAIN-SUFFIX,windowsupdate.com,US-Fallback
+  - DOMAIN-SUFFIX,update.microsoft.com,US-Fallback
+  - DOMAIN-SUFFIX,download.windowsupdate.com,US-Fallback
+  - DOMAIN-SUFFIX,msftconnecttest.com,US-Fallback
+  - DOMAIN-SUFFIX,msftncsi.com,US-Fallback
+  - DOMAIN-SUFFIX,microsoftedge.com,US-Fallback
+  - DOMAIN-SUFFIX,microsoftusercontent.com,US-Fallback
+  - DOMAIN-SUFFIX,bing.com,US-Fallback
+  - DOMAIN-SUFFIX,bing.net,US-Fallback
+  - DOMAIN-SUFFIX,msn.com,US-Fallback
+  - DOMAIN-SUFFIX,azure.com,US-Fallback
+  - DOMAIN-SUFFIX,azure.net,US-Fallback
+  - DOMAIN-SUFFIX,azureedge.net,US-Fallback
+  - DOMAIN-SUFFIX,azurewebsites.net,US-Fallback
+  - DOMAIN-SUFFIX,azurefd.net,US-Fallback
+  - DOMAIN-SUFFIX,azurestaticapps.net,US-Fallback
+  - DOMAIN-SUFFIX,visualstudio.com,US-Fallback
+  - DOMAIN-SUFFIX,visualstudio.microsoft.com,US-Fallback
+  - DOMAIN-SUFFIX,vscode.dev,US-Fallback
+  - DOMAIN-SUFFIX,vscode-cdn.net,US-Fallback
+  - DOMAIN-SUFFIX,xbox.com,US-Fallback
+  - DOMAIN-SUFFIX,xboxlive.com,US-Fallback
+  - DOMAIN-SUFFIX,xboxservices.com,US-Fallback
+  - DOMAIN-SUFFIX,gamepass.com,US-Fallback
+  - DOMAIN-SUFFIX,microsoftstore.com,US-Fallback
+  - DOMAIN-SUFFIX,s-microsoft.com,US-Fallback
+  - DOMAIN-SUFFIX,msauth.net,US-Fallback
+  - DOMAIN-SUFFIX,msauthimages.net,US-Fallback
+  - DOMAIN-SUFFIX,msftauth.net,US-Fallback
+  - DOMAIN-SUFFIX,msftidentity.com,US-Fallback
+  - DOMAIN-SUFFIX,microsoftgraph.com,US-Fallback
+  - DOMAIN-SUFFIX,graph.microsoft.com,US-Fallback
+  - DOMAIN-SUFFIX,login.microsoftonline.com,US-Fallback
+  - DOMAIN-SUFFIX,login.live.com,US-Fallback
+  - DOMAIN-SUFFIX,account.microsoft.com,US-Fallback
+  - DOMAIN-SUFFIX,copilot.microsoft.com,US-Fallback
+  - DOMAIN-SUFFIX,githubcopilot.com,US-Fallback
+
+  # 王者荣耀 / 腾讯 / 微信 / QQ
+  - GEOSITE,tencent,DIRECT
+
+  # 支付宝 / 阿里系国内服务
+  - DOMAIN-SUFFIX,alipay.com,DIRECT
+  - DOMAIN-SUFFIX,alipayobjects.com,DIRECT
+
+  # 中国银行 / 银联 / 主要中资银行：显式直连
+  - DOMAIN-SUFFIX,boc.cn,DIRECT
+  - DOMAIN-SUFFIX,bankofchina.com,DIRECT
+  - DOMAIN-SUFFIX,icbc.com.cn,DIRECT
+  - DOMAIN-SUFFIX,ccb.com,DIRECT
+  - DOMAIN-SUFFIX,abchina.com,DIRECT
+  - DOMAIN-SUFFIX,bankcomm.com,DIRECT
+  - DOMAIN-SUFFIX,psbc.com,DIRECT
+  - DOMAIN-SUFFIX,cmbchina.com,DIRECT
+  - DOMAIN-SUFFIX,spdb.com.cn,DIRECT
+  - DOMAIN-SUFFIX,citicbank.com,DIRECT
+  - DOMAIN-SUFFIX,cmbc.com.cn,DIRECT
+  - DOMAIN-SUFFIX,cib.com.cn,DIRECT
+  - DOMAIN-SUFFIX,cebbank.com,DIRECT
+  - DOMAIN-SUFFIX,hxb.com.cn,DIRECT
+  - DOMAIN-SUFFIX,pingan.com,DIRECT
+  - DOMAIN-SUFFIX,pinganbank.com.cn,DIRECT
+  - DOMAIN-SUFFIX,cgbchina.com.cn,DIRECT
+  - DOMAIN-SUFFIX,95516.com,DIRECT
+  - DOMAIN-SUFFIX,unionpay.com,DIRECT
+  - DOMAIN-SUFFIX,unionpayintl.com,DIRECT
+  - DOMAIN-SUFFIX,chinapay.com,DIRECT
+
+  # 钱迹 App -> 直连
+  - DOMAIN-SUFFIX,qianjiapp.com,DIRECT
+  - DOMAIN-SUFFIX,xxoojoke.com,DIRECT
+  - DOMAIN-SUFFIX,litangkj.com,DIRECT
+  - DOMAIN-SUFFIX,qianjibillimage.kodo-accelerate.cn-south-1.qiniucs.com,DIRECT
+
+  # 酷安
+  - DOMAIN-SUFFIX,coolapk.com,DIRECT
+  - DOMAIN-SUFFIX,coolapkmarket.com,DIRECT
+
+  # 百度全家桶
+  - DOMAIN-SUFFIX,baidu.com,DIRECT
+  - DOMAIN-SUFFIX,baidupcs.com,DIRECT
+  - DOMAIN-SUFFIX,bdstatic.com,DIRECT
+  - DOMAIN-SUFFIX,bcebos.com,DIRECT
+  - DOMAIN-SUFFIX,baidustatic.com,DIRECT
+  - DOMAIN-SUFFIX,baiducontent.com,DIRECT
+  - DOMAIN-SUFFIX,bdimg.com,DIRECT
+  - DOMAIN-SUFFIX,bdydns.com,DIRECT
+
+  # 美团 / 大众点评
+  - DOMAIN-SUFFIX,meituan.com,DIRECT
+  - DOMAIN-SUFFIX,meituan.net,DIRECT
+  - DOMAIN-SUFFIX,sankuai.com,DIRECT
+  - DOMAIN-SUFFIX,mtyun.com,DIRECT
+  - DOMAIN-SUFFIX,dianping.com,DIRECT
+  - DOMAIN-SUFFIX,maoyan.com,DIRECT
+  - DOMAIN-SUFFIX,neixin.cn,DIRECT
+
+  # 抖音商城 / 电商
+  - DOMAIN-SUFFIX,douyinec.com,DIRECT
+  - DOMAIN-SUFFIX,jinritemai.com,DIRECT
+  - DOMAIN-SUFFIX,temaiapi.com,DIRECT
+  - DOMAIN-SUFFIX,ecombdapi.com,DIRECT
+  - DOMAIN-SUFFIX,ecombdimg.com,DIRECT
+  - DOMAIN-SUFFIX,ecombdstatic.com,DIRECT
+  - DOMAIN-SUFFIX,ecombdvod.com,DIRECT
+
+  # Apple 全家桶 -> 美国坦帕优先，瑞典备用
+  - GEOSITE,apple,Apple-US
+  - IP-CIDR,17.0.0.0/8,Apple-US,no-resolve
+
+  # OpenAI / ChatGPT 全家桶 -> 美国坦帕优先，瑞典备用
+  - DOMAIN-SUFFIX,openai.com,OpenAI-US
+  - DOMAIN-SUFFIX,chatgpt.com,OpenAI-US
+  - DOMAIN-SUFFIX,oaistatic.com,OpenAI-US
+  - DOMAIN-SUFFIX,oaiusercontent.com,OpenAI-US
+
+  # 其他 AI -> 美国坦帕优先，瑞典备用
+  - DOMAIN-SUFFIX,anthropic.com,OpenAI-US
+  - DOMAIN-SUFFIX,claude.ai,OpenAI-US
+  - DOMAIN-SUFFIX,perplexity.ai,OpenAI-US
+  - DOMAIN,gemini.google.com,OpenAI-US
+  - DOMAIN-SUFFIX,llama.com,OpenAI-US
+
+  # AI 全家桶扩展 -> 美国坦帕优先，瑞典备用
+  - DOMAIN-SUFFIX,grok.com,OpenAI-US
+  - DOMAIN-SUFFIX,x.ai,OpenAI-US
+  - DOMAIN-SUFFIX,cursor.com,OpenAI-US
+  - DOMAIN-SUFFIX,cursor.sh,OpenAI-US
+  - DOMAIN-SUFFIX,githubcopilot.com,OpenAI-US
+  - DOMAIN,copilot.microsoft.com,OpenAI-US
+  - DOMAIN-SUFFIX,poe.com,OpenAI-US
+  - DOMAIN-SUFFIX,character.ai,OpenAI-US
+  - DOMAIN-SUFFIX,manus.im,OpenAI-US
+
+  # Meta 全家桶 -> 独立 Meta 策略（默认 US-Fallback）
+  - DOMAIN-SUFFIX,meta.com,Meta
+  - DOMAIN-SUFFIX,facebook.com,Meta
+  - DOMAIN-SUFFIX,facebook.net,Meta
+  - DOMAIN-SUFFIX,fb.com,Meta
+  - DOMAIN-SUFFIX,fb.me,Meta
+  - DOMAIN-SUFFIX,fbcdn.net,Meta
+  - DOMAIN-SUFFIX,fbcdn.com,Meta
+  - DOMAIN-SUFFIX,fbsbx.com,Meta
+  - DOMAIN-SUFFIX,messenger.com,Meta
+  - DOMAIN-SUFFIX,m.me,Meta
+  - DOMAIN-SUFFIX,instagram.com,Meta
+  - DOMAIN-SUFFIX,instagram.net,Meta
+  - DOMAIN-SUFFIX,cdninstagram.com,Meta
+  - DOMAIN-SUFFIX,ig.me,Meta
+  - DOMAIN-SUFFIX,threads.com,Meta
+  - DOMAIN-SUFFIX,threads.net,Meta
+  - DOMAIN-SUFFIX,threadsusercontent.com,Meta
+  - DOMAIN-SUFFIX,whatsapp.com,Meta
+  - DOMAIN-SUFFIX,whatsapp.net,Meta
+  - DOMAIN-SUFFIX,wa.me,Meta
+  - DOMAIN-SUFFIX,oculus.com,Meta
+  - DOMAIN-SUFFIX,oculuscdn.com,Meta
+  - DOMAIN-SUFFIX,meta.ai,Meta
+  - DOMAIN-SUFFIX,ai.meta.com,Meta
+
+  # PayPal -> 美国坦帕优先，瑞典备用
+  - DOMAIN-SUFFIX,paypal.com,US-Fallback
+  - DOMAIN-SUFFIX,paypalobjects.com,US-Fallback
+
+  # TikTok -> 美国坦帕优先，瑞典备用
+  - GEOSITE,tiktok,US-Fallback
+
+  # X / Twitter -> 独立 X 策略（默认 US-Fallback）
+  - DOMAIN-SUFFIX,x.com,X
+  - DOMAIN-SUFFIX,twitter.com,X
+  - DOMAIN-SUFFIX,twimg.com,X
+  - DOMAIN-SUFFIX,t.co,X
+  - DOMAIN-SUFFIX,tweetdeck.com,X
+  - DOMAIN-SUFFIX,twitter.net,X
+  - DOMAIN-SUFFIX,twtrdns.net,X
+  - DOMAIN-SUFFIX,pscp.tv,X
+  - DOMAIN-SUFFIX,periscope.tv,X
+
+  # YouTube -> 越南优先、瑞典备用（必须位于 Google 前）
+  - GEOSITE,youtube,Overseas
+
+  # Google 全家桶 -> 越南优先、瑞典备用；Gemini 已被上方 AI 规则优先匹配
+  - GEOSITE,google,Overseas
+
+  # Wise
+  - DOMAIN-SUFFIX,wise.com,Overseas
+  - DOMAIN-SUFFIX,transferwise.com,Overseas
+
+  # GitHub / Telegram
+  - GEOSITE,github,Overseas
+  - GEOSITE,telegram,Overseas
+
+  # 海外网站总策略：所有非中国域名统一走代理
+  # 已在上方命中的专用策略保持不变
+  - GEOSITE,geolocation-!cn,Overseas
+
+  # 中国网站总策略：国内域名 / IP 直连
+  - GEOSITE,cn,DIRECT
+  - GEOIP,CN,DIRECT,no-resolve
+
+  # 兜底：未匹配流量仍走海外代理，避免海外网站意外直连
+  - MATCH,Overseas
+
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    tolerance: 50
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
   - name: Vietnam
     type: url-test
     include-all: true
