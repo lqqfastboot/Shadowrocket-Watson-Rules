@@ -75,6 +75,7 @@ proxy-groups:
     proxies:
       - Vietnam
       - Sweden
+      - US-Tampa
     url: https://www.gstatic.com/generate_204
     interval: 120
     lazy: true
