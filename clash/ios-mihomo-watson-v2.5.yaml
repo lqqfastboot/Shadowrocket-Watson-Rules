@@ -1,7 +1,8 @@
-# Watson Clash / Mihomo V2.5 草案 — 分流规则 + 策略组优化（基于 v2.4，未覆盖原文件）
+# Watson Clash / Mihomo V2.5.1 — 分流规则 + 策略组优化（基于 v2.4，未覆盖原文件）
 # 改动: 1) Global-Auto tolerance 10->50 防频繁跳节点  2) 删重复规则 googlevideo.com x1
-#       3) 补回 V2 轻量版有、v2.4 丢失的 IBKR-US 组 + 6 条盈透规则（仅美国出口）
-#       4) 低频服务组 hidden:true，只留 19 个常用组在首页（同 v3 思路）
+#       3) IBKR 盈透: IBKR-US 策略组（坦帕优先 -> 全美备用，仅美国出口、无 DIRECT）+ 13 条域名
+#       4) Meta 全家桶: Meta 策略组取消隐藏并精简选项，含 Facebook/Instagram/Threads/Messenger/Oculus/Meta AI，WhatsApp 默认跟随 Meta
+#       5) 低频服务组 hidden:true，只留常用组在首页（同 v3 思路）
 # 注意: 仍是覆写模板，不含节点/订阅/DNS/TUN；导入前备份，先在客户端验证规则集加载。
 proxy-groups:
 - name: 🇺🇸🇸🇪 US-SE-Strict
@@ -878,71 +879,19 @@ proxy-groups:
   icon: https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/Ti/Meta.png
   proxies:
   - 🇺🇸🇸🇪 US-SE-Fallback
-  - 🖥️ All-Nodes
-  - 🌍 Global-Fallback
-  - 🌍 Global-Auto
+  - 🇺🇸🇸🇪 US-SE-Strict
   - 🇺🇸 US-Auto
   - 🇸🇬 SG-Auto
-  - 🇭🇰 HK-Auto
-  - 🇲🇴 MO-Auto
-  - 🇯🇵 JP-Auto
-  - 🇹🇼 TW-Auto
-  - 🇬🇧 UK-Auto
-  - 🇩🇪 DE-Auto
-  - 🇫🇷 FR-Auto
-  - 🇷🇺 RU-Auto
-  - 🇨🇦 CA-Auto
-  - 🇦🇺 AU-Auto
-  - 🇰🇷 KR-Auto
-  - 🇮🇹 IT-Auto
-  - 🇪🇸 ES-Auto
-  - 🇳🇱 NL-Auto
-  - 🇫🇮 FI-Auto
-  - 🇳🇴 NO-Auto
-  - 🇸🇪 SE-Auto
-  - 🇨🇭 CH-Auto
-  - 🇵🇱 PL-Auto
-  - 🇮🇳 IN-Auto
-  - 🇵🇭 PH-Auto
-  - 🇻🇳 VN-Auto
-  - 🇲🇾 MY-Auto
-  - PROXY-Gate
+  - 🌍 Global-Auto
+  - 🖥️ All-Nodes
   - DIRECT
-  hidden: true
 - name: WhatsApp
   type: select
   icon: https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/Ti/WhatsApp.svg
   proxies:
+  - Meta
   - 🇺🇸🇸🇪 US-SE-Fallback
   - 🖥️ All-Nodes
-  - 🌍 Global-Fallback
-  - 🌍 Global-Auto
-  - 🇺🇸 US-Auto
-  - 🇸🇬 SG-Auto
-  - 🇭🇰 HK-Auto
-  - 🇲🇴 MO-Auto
-  - 🇯🇵 JP-Auto
-  - 🇹🇼 TW-Auto
-  - 🇬🇧 UK-Auto
-  - 🇩🇪 DE-Auto
-  - 🇫🇷 FR-Auto
-  - 🇷🇺 RU-Auto
-  - 🇨🇦 CA-Auto
-  - 🇦🇺 AU-Auto
-  - 🇰🇷 KR-Auto
-  - 🇮🇹 IT-Auto
-  - 🇪🇸 ES-Auto
-  - 🇳🇱 NL-Auto
-  - 🇫🇮 FI-Auto
-  - 🇳🇴 NO-Auto
-  - 🇸🇪 SE-Auto
-  - 🇨🇭 CH-Auto
-  - 🇵🇱 PL-Auto
-  - 🇮🇳 IN-Auto
-  - 🇵🇭 PH-Auto
-  - 🇻🇳 VN-Auto
-  - 🇲🇾 MY-Auto
-  - PROXY-Gate
   - DIRECT
   hidden: true
 - name: Telegram
@@ -1406,6 +1355,19 @@ proxy-groups:
   - PROXY-Gate
   - DIRECT
   hidden: true
+- name: 🇺🇸 US-Tampa-Auto
+  type: url-test
+  include-all: true
+  filter: (?i)(Tampa|Florida|佛罗里达|坦帕)
+  url: https://www.gstatic.com/generate_204
+  interval: 300
+  tolerance: 50
+  lazy: true
+  timeout: 5000
+  max-failed-times: 3
+  expected-status: 204
+  empty-fallback: REJECT
+  hidden: true
 - name: 🇺🇸 US-Auto
   type: url-test
   empty-fallback: REJECT
@@ -1850,8 +1812,16 @@ proxy-groups:
   max-failed-times: 3
   lazy: true
 - name: IBKR-US
+  type: select
+  proxies:
+  - IBKR-Fallback
+  - 🇺🇸 US-Tampa-Auto
+  - 🇺🇸 US-Auto
+  - REJECT
+- name: IBKR-Fallback
   type: fallback
   proxies:
+  - 🇺🇸 US-Tampa-Auto
   - 🇺🇸 US-Auto
   url: https://www.gstatic.com/generate_204
   interval: 300
@@ -1859,6 +1829,7 @@ proxy-groups:
   timeout: 5000
   max-failed-times: 3
   empty-fallback: REJECT
+  hidden: true
 rules:
 - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
 - IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
@@ -1884,6 +1855,13 @@ rules:
 - DOMAIN-SUFFIX,interactivebrokers.com.hk,IBKR-US
 - DOMAIN-SUFFIX,ibkr.com,IBKR-US
 - DOMAIN-SUFFIX,ibllc.com,IBKR-US
+- DOMAIN-SUFFIX,interactivebrokers.ca,IBKR-US
+- DOMAIN-SUFFIX,interactivebrokers.ie,IBKR-US
+- DOMAIN-SUFFIX,interactivebrokers.co.in,IBKR-US
+- DOMAIN-SUFFIX,interactivebrokers.co.jp,IBKR-US
+- DOMAIN-SUFFIX,interactivebrokers.com.au,IBKR-US
+- DOMAIN-SUFFIX,ibkr.com.cn,IBKR-US
+- DOMAIN-SUFFIX,ibllc.com.cn,IBKR-US
 - RULE-SET,bittorrent_domain,DIRECT
 - DOMAIN-KEYWORD,dl-a10b-,DIRECT
 - DOMAIN-KEYWORD,dl-z01a-,DIRECT
@@ -2070,6 +2048,8 @@ rules:
 - DOMAIN-SUFFIX,ai.meta.com,Meta
 - DOMAIN-SUFFIX,muse.ai,Meta
 - DOMAIN-SUFFIX,metaaivm.com,Meta
+- DOMAIN-SUFFIX,oculus.com,Meta
+- DOMAIN-SUFFIX,oculuscdn.com,Meta
 - RULE-SET,Facebook-IP,Meta,no-resolve
 - IP-CIDR,157.240.0.0/16,Meta,no-resolve
 - IP-CIDR,31.13.64.0/18,Meta,no-resolve
