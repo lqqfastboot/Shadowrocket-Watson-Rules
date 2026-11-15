@@ -110,6 +110,18 @@ proxy-groups:
     timeout: 5000
     max-failed-times: 3
 
+  # IBKR 盈透证券：坦帕优先，其他美国节点备用（不切换非美国出口）
+  - name: IBKR-US
+    type: fallback
+    proxies:
+      - US-Tampa
+      - US-Other
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
   # X / Twitter 独立可选策略；默认保持美国坦帕优先、瑞典备用
   - name: X
     type: select
@@ -151,6 +163,21 @@ rules:
 
   # wczhsw.com 及其子域名强制直连（优先于海外分流）
   - DOMAIN-SUFFIX,wczhsw.com,DIRECT
+
+  # IBKR 盈透证券：官网、客户端、API、交易连接域名
+  - DOMAIN-SUFFIX,interactivebrokers.com,IBKR-US
+  - DOMAIN-SUFFIX,interactivebrokers.ca,IBKR-US
+  - DOMAIN-SUFFIX,interactivebrokers.ie,IBKR-US
+  - DOMAIN-SUFFIX,interactivebrokers.co.uk,IBKR-US
+  - DOMAIN-SUFFIX,interactivebrokers.co.in,IBKR-US
+  - DOMAIN-SUFFIX,interactivebrokers.co.jp,IBKR-US
+  - DOMAIN-SUFFIX,interactivebrokers.com.hk,IBKR-US
+  - DOMAIN-SUFFIX,interactivebrokers.com.sg,IBKR-US
+  - DOMAIN-SUFFIX,interactivebrokers.com.au,IBKR-US
+  - DOMAIN-SUFFIX,ibkr.com,IBKR-US
+  - DOMAIN-SUFFIX,ibkr.com.cn,IBKR-US
+  - DOMAIN-SUFFIX,ibllc.com,IBKR-US
+  - DOMAIN-SUFFIX,ibllc.com.cn,IBKR-US
 
   # Microsoft 全家桶（Office / Microsoft 365 / Outlook / OneDrive / Teams / Windows / Azure / Xbox）
   # 美国坦帕优先、瑞典备用；放在国内直连和 GEOIP CN 前。
