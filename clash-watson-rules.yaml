@@ -123,6 +123,19 @@ proxy-groups:
     timeout: 5000
     max-failed-times: 3
 
+  # Cindy 专用：美国坦帕优先，瑞典第一备用，越南第二备用
+  - name: Cindy
+    type: fallback
+    proxies:
+      - US-Tampa
+      - Sweden
+      - Vietnam
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
   # X / Twitter 独立可选策略；默认保持美国坦帕优先、瑞典备用
   - name: X
     type: select
@@ -181,6 +194,30 @@ rules:
   - DOMAIN-SUFFIX,ibkr.com.cn,IBKR-US
   - DOMAIN-SUFFIX,ibllc.com,IBKR-US
   - DOMAIN-SUFFIX,ibllc.com.cn,IBKR-US
+
+  # Cindy 服务专用域名：优先于其他海外及 GitHub 规则
+  - DOMAIN,auth.cindy.app,Cindy
+  - DOMAIN,chat.cindy.app,Cindy
+  - DOMAIN,device-link.cindy.app,Cindy
+  - DOMAIN,agent-net.cindy.app,Cindy
+  - DOMAIN,oauth-broker.cindy.app,Cindy
+  - DOMAIN,oss.cindy.app,Cindy
+  - DOMAIN,heartbeat.cindy.app,Cindy
+  - DOMAIN,webhook.cindy.app,Cindy
+  - DOMAIN,model-access.cindy.app,Cindy
+  - DOMAIN,llm-api.cindy.app,Cindy
+  - DOMAIN,voice.cindy.app,Cindy
+  - DOMAIN,github.cindy.app,Cindy
+  - DOMAIN,xd-skillhub.cindy.app,Cindy
+  - DOMAIN,cindy-skill-hub.cindy.app,Cindy
+  - DOMAIN,plugin.cindy.app,Cindy
+  - DOMAIN,hotfix.cindy.app,Cindy
+  - DOMAIN,mobile-update.cindy.app,Cindy
+  - DOMAIN,share.cindy.app,Cindy
+  - DOMAIN,telegram-hook.cindy.app,Cindy
+  - DOMAIN,x-hook.cindy.app,Cindy
+  - DOMAIN,feishu-hook.cindy.app,Cindy
+  - DOMAIN,slack-hook.cindy.app,Cindy
 
   # Microsoft 全家桶（Office / Microsoft 365 / Outlook / OneDrive / Teams / Windows / Azure / Xbox）
   # 美国坦帕优先、瑞典备用；放在国内直连和 GEOIP CN 前。
