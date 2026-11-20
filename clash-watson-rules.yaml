@@ -148,6 +148,19 @@ proxy-groups:
     timeout: 5000
     max-failed-times: 3
 
+  # Gemini 专用：美国坦帕优先、全美国备用、瑞典兜底
+  - name: Gemini
+    type: fallback
+    proxies:
+      - US-Tampa
+      - US-All
+      - Sweden
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
   # X / Twitter 独立可选策略；默认保持美国坦帕优先、瑞典备用
   - name: X
     type: select
@@ -230,6 +243,14 @@ rules:
   - DOMAIN,x-hook.cindy.app,Cindy
   - DOMAIN,feishu-hook.cindy.app,Cindy
   - DOMAIN,slack-hook.cindy.app,Cindy
+
+  # Gemini 网页、AI Studio、Gemini API 专属域名；置于 Claude 的 googleapis.com 泛匹配前
+  - DOMAIN,gemini.google.com,Gemini
+  - DOMAIN,aistudio.google.com,Gemini
+  - DOMAIN,ai.google.dev,Gemini
+  - DOMAIN,makersuite.google.com,Gemini
+  - DOMAIN,alkalimakersuite-pa.clients6.google.com,Gemini
+  - DOMAIN,generativelanguage.googleapis.com,Gemini
 
   # Claude AI 及指定开发依赖域名；优先于通用 AI/Google/GitHub 分流
   - DOMAIN-SUFFIX,claude.ai,Claude-AI
@@ -390,7 +411,6 @@ rules:
 
   # 其他 AI -> 美国坦帕优先，瑞典备用
   - DOMAIN-SUFFIX,perplexity.ai,OpenAI-US
-  - DOMAIN,gemini.google.com,OpenAI-US
   - DOMAIN-SUFFIX,llama.com,OpenAI-US
 
   # AI 全家桶扩展 -> 美国坦帕优先，瑞典备用
