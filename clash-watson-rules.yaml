@@ -136,6 +136,18 @@ proxy-groups:
     timeout: 5000
     max-failed-times: 3
 
+  # Claude AI 专用：坦帕优先，美国全部节点备用
+  - name: Claude-AI
+    type: fallback
+    proxies:
+      - US-Tampa
+      - US-All
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
   # X / Twitter 独立可选策略；默认保持美国坦帕优先、瑞典备用
   - name: X
     type: select
@@ -218,6 +230,22 @@ rules:
   - DOMAIN,x-hook.cindy.app,Cindy
   - DOMAIN,feishu-hook.cindy.app,Cindy
   - DOMAIN,slack-hook.cindy.app,Cindy
+
+  # Claude AI 及指定开发依赖域名；优先于通用 AI/Google/GitHub 分流
+  - DOMAIN-SUFFIX,claude.ai,Claude-AI
+  - DOMAIN-SUFFIX,anthropic.com,Claude-AI
+  - DOMAIN-SUFFIX,claude.com,Claude-AI
+  - DOMAIN-SUFFIX,npmjs.org,Claude-AI
+  - DOMAIN-SUFFIX,pypi.org,Claude-AI
+  - DOMAIN-SUFFIX,pythonhosted.org,Claude-AI
+  - DOMAIN-SUFFIX,github.com,Claude-AI
+  - DOMAIN-SUFFIX,cloudflare.com,Claude-AI
+  - DOMAIN-SUFFIX,jsdelivr.net,Claude-AI
+  - DOMAIN-SUFFIX,unpkg.com,Claude-AI
+  - DOMAIN-SUFFIX,tailwindcss.com,Claude-AI
+  - DOMAIN-SUFFIX,jquery.com,Claude-AI
+  - DOMAIN-SUFFIX,googleapis.com,Claude-AI
+  - DOMAIN-SUFFIX,gstatic.com,Claude-AI
 
   # Microsoft 全家桶（Office / Microsoft 365 / Outlook / OneDrive / Teams / Windows / Azure / Xbox）
   # 美国坦帕优先、瑞典备用；放在国内直连和 GEOIP CN 前。
@@ -361,8 +389,6 @@ rules:
   - DOMAIN-SUFFIX,oaiusercontent.com,OpenAI-US
 
   # 其他 AI -> 美国坦帕优先，瑞典备用
-  - DOMAIN-SUFFIX,anthropic.com,OpenAI-US
-  - DOMAIN-SUFFIX,claude.ai,OpenAI-US
   - DOMAIN-SUFFIX,perplexity.ai,OpenAI-US
   - DOMAIN,gemini.google.com,OpenAI-US
   - DOMAIN-SUFFIX,llama.com,OpenAI-US
