@@ -149,6 +149,19 @@ proxy-groups:
     max-failed-times: 3
 
   # Gemini 专用：美国坦帕优先、全美国备用、瑞典兜底
+  # TikTok 专用：美国坦帕优先、全美国备用、瑞典兜底
+  - name: TikTok
+    type: fallback
+    proxies:
+      - US-Tampa
+      - US-All
+      - Sweden
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
   - name: Gemini
     type: fallback
     proxies:
@@ -454,8 +467,8 @@ rules:
   - DOMAIN-SUFFIX,paypal.com,US-Fallback
   - DOMAIN-SUFFIX,paypalobjects.com,US-Fallback
 
-  # TikTok -> 美国坦帕优先，瑞典备用
-  - GEOSITE,tiktok,US-Fallback
+  # TikTok -> 美国坦帕优先、全美国备用、瑞典兜底
+  - GEOSITE,tiktok,TikTok
 
   # X / Twitter -> 独立 X 策略（默认 US-Fallback）
   - DOMAIN-SUFFIX,x.com,X
