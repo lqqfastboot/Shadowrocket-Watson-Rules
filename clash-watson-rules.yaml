@@ -1,7 +1,7 @@
-# Watson Clash / Mihomo 轻量规则库 V2
+# Watson Clash / Mihomo 轻量规则库 V3
 # 面向支持 proxy-groups + rules 的 iOS Clash 客户端规则库。
 # 不修改 DNS / TUN / 端口等客户端全局设置，不包含任何节点凭据。
-# Apple / AI / Meta / PayPal / TikTok / X -> 美国坦帕优先、瑞典备用；YouTube / Google / 其他海外 -> 瑞典优先、越南备用、美国坦帕及全美国节点后备。
+# 专用业务按各组顺序切换；Overseas 瑞典 > 越南 > 坦帕 > 全美国。
 
 proxy-groups:
   - name: US-Tampa
@@ -9,8 +9,8 @@ proxy-groups:
     include-all: true
     filter: '(?i)(佛罗里达州.*坦帕|Tampa|Florida.*Tampa)'
     url: https://www.gstatic.com/generate_204
-    interval: 120
-    tolerance: 50
+    interval: 300
+    tolerance: 100
     lazy: true
     timeout: 5000
     max-failed-times: 3
@@ -21,8 +21,8 @@ proxy-groups:
     include-all: true
     filter: '(?i)(美国|United States|USA|US[-_ ]|🇺🇸|Tampa|Florida|Los Angeles|New York|Seattle|San Jose)'
     url: https://www.gstatic.com/generate_204
-    interval: 120
-    tolerance: 50
+    interval: 300
+    tolerance: 100
     lazy: true
     timeout: 5000
     max-failed-times: 3
@@ -33,20 +33,19 @@ proxy-groups:
     include-all: true
     filter: '(?i)^(?!.*(?:Tampa|坦帕))(?=.*(?:美国|United States|USA|US[-_ ]|🇺🇸|Los Angeles|New York|Seattle|San Jose|洛杉矶|纽约|西雅图|圣何塞)).*$'
     url: https://www.gstatic.com/generate_204
-    interval: 120
-    tolerance: 50
+    interval: 300
+    tolerance: 100
     lazy: true
     timeout: 5000
     max-failed-times: 3
-
 
   - name: Vietnam
     type: url-test
     include-all: true
     filter: '(?i)(越南胡志明|Vietnam.*HCM|Ho Chi Minh)'
     url: https://www.gstatic.com/generate_204
-    interval: 120
-    tolerance: 50
+    interval: 300
+    tolerance: 100
     lazy: true
     timeout: 5000
     max-failed-times: 3
@@ -56,8 +55,8 @@ proxy-groups:
     include-all: true
     filter: '(?i)(瑞典|Sweden)'
     url: https://www.gstatic.com/generate_204
-    interval: 120
-    tolerance: 50
+    interval: 300
+    tolerance: 100
     lazy: true
     timeout: 5000
     max-failed-times: 3
@@ -148,7 +147,6 @@ proxy-groups:
     timeout: 5000
     max-failed-times: 3
 
-  # Gemini 专用：美国坦帕优先、全美国备用、瑞典兜底
   # TikTok 专用：美国坦帕优先、全美国备用、瑞典兜底
   - name: TikTok
     type: fallback
@@ -162,6 +160,7 @@ proxy-groups:
     timeout: 5000
     max-failed-times: 3
 
+  # Gemini 专用：美国坦帕优先、全美国备用、瑞典兜底
   - name: Gemini
     type: fallback
     proxies:
@@ -173,6 +172,41 @@ proxy-groups:
     lazy: true
     timeout: 5000
     max-failed-times: 3
+
+  - name: Developer
+    type: fallback
+    proxies:
+      - US-Tampa
+      - US-All
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  - name: PayPal-US
+    type: fallback
+    proxies:
+      - US-Tampa
+      - US-Other
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  # Wise 固定瑞典地区，不自动跨国
+  - name: Wise
+    type: select
+    proxies:
+      - Sweden
+
+  # 普通 Apple 下载及更新：默认直连，可手动切回原策略
+  - name: Apple-Services
+    type: select
+    proxies:
+      - DIRECT
+      - Apple-US
 
   # X / Twitter 独立可选策略；默认保持美国坦帕优先、瑞典备用
   - name: X
@@ -206,6 +240,10 @@ rules:
   - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
   - IP-CIDR,169.254.0.0/16,DIRECT,no-resolve
   - IP-CIDR,224.0.0.0/4,DIRECT,no-resolve
+  - IP-CIDR6,::1/128,DIRECT,no-resolve
+  - IP-CIDR6,fc00::/7,DIRECT,no-resolve
+  - IP-CIDR6,fe80::/10,DIRECT,no-resolve
+  - IP-CIDR6,ff02::/16,DIRECT,no-resolve
   - DOMAIN-SUFFIX,local,DIRECT
 
   # WebRTC / STUN 防真实 IP 泄漏
@@ -257,7 +295,7 @@ rules:
   - DOMAIN,feishu-hook.cindy.app,Cindy
   - DOMAIN,slack-hook.cindy.app,Cindy
 
-  # Gemini 网页、AI Studio、Gemini API 专属域名；置于 Claude 的 googleapis.com 泛匹配前
+  # Gemini 网页、AI Studio、Gemini API 专属域名；置于 Google 共享域名泛匹配前
   - DOMAIN,gemini.google.com,Gemini
   - DOMAIN,aistudio.google.com,Gemini
   - DOMAIN,ai.google.dev,Gemini
@@ -265,21 +303,27 @@ rules:
   - DOMAIN,alkalimakersuite-pa.clients6.google.com,Gemini
   - DOMAIN,generativelanguage.googleapis.com,Gemini
 
-  # Claude AI 及指定开发依赖域名；优先于通用 AI/Google/GitHub 分流
+  # Claude AI 专属域名
   - DOMAIN-SUFFIX,claude.ai,Claude-AI
   - DOMAIN-SUFFIX,anthropic.com,Claude-AI
   - DOMAIN-SUFFIX,claude.com,Claude-AI
-  - DOMAIN-SUFFIX,npmjs.org,Claude-AI
-  - DOMAIN-SUFFIX,pypi.org,Claude-AI
-  - DOMAIN-SUFFIX,pythonhosted.org,Claude-AI
-  - DOMAIN-SUFFIX,github.com,Claude-AI
-  - DOMAIN-SUFFIX,cloudflare.com,Claude-AI
-  - DOMAIN-SUFFIX,jsdelivr.net,Claude-AI
-  - DOMAIN-SUFFIX,unpkg.com,Claude-AI
-  - DOMAIN-SUFFIX,tailwindcss.com,Claude-AI
-  - DOMAIN-SUFFIX,jquery.com,Claude-AI
-  - DOMAIN-SUFFIX,googleapis.com,Claude-AI
-  - DOMAIN-SUFFIX,gstatic.com,Claude-AI
+  # 共享开发依赖：保留原美国出口
+  - DOMAIN-SUFFIX,npmjs.org,Developer
+  - DOMAIN-SUFFIX,pypi.org,Developer
+  - DOMAIN-SUFFIX,pythonhosted.org,Developer
+  - DOMAIN-SUFFIX,github.com,Developer
+  - DOMAIN-SUFFIX,cloudflare.com,Developer
+  - DOMAIN-SUFFIX,jsdelivr.net,Developer
+  - DOMAIN-SUFFIX,unpkg.com,Developer
+  - DOMAIN-SUFFIX,tailwindcss.com,Developer
+  - DOMAIN-SUFFIX,jquery.com,Developer
+  # Google 共享资源：跟随普通海外策略，Gemini 专属 API 优先
+  - DOMAIN-SUFFIX,googleapis.com,Overseas
+  - DOMAIN-SUFFIX,gstatic.com,Overseas
+
+  # Copilot 专用规则优先于 Microsoft 泛匹配
+  - DOMAIN-SUFFIX,copilot.microsoft.com,OpenAI-US
+  - DOMAIN-SUFFIX,githubcopilot.com,OpenAI-US
 
   # Microsoft 全家桶（Office / Microsoft 365 / Outlook / OneDrive / Teams / Windows / Azure / Xbox）
   # 美国坦帕优先、瑞典备用；放在国内直连和 GEOIP CN 前。
@@ -291,7 +335,6 @@ rules:
   - DOMAIN-SUFFIX,office.net,US-Fallback
   - DOMAIN-SUFFIX,officeapps.live.com,US-Fallback
   - DOMAIN-SUFFIX,outlook.com,US-Fallback
-  - DOMAIN-SUFFIX,outlook.office.com,US-Fallback
   - DOMAIN-SUFFIX,outlook.live.com,US-Fallback
   - DOMAIN-SUFFIX,hotmail.com,US-Fallback
   - DOMAIN-SUFFIX,live.com,US-Fallback
@@ -300,15 +343,11 @@ rules:
   - DOMAIN-SUFFIX,1drv.com,US-Fallback
   - DOMAIN-SUFFIX,sharepoint.com,US-Fallback
   - DOMAIN-SUFFIX,sharepointonline.com,US-Fallback
-  - DOMAIN-SUFFIX,teams.microsoft.com,US-Fallback
-  - DOMAIN-SUFFIX,teams.live.com,US-Fallback
   - DOMAIN-SUFFIX,skype.com,US-Fallback
   - DOMAIN-SUFFIX,skypeassets.com,US-Fallback
   - DOMAIN-SUFFIX,windows.com,US-Fallback
   - DOMAIN-SUFFIX,windows.net,US-Fallback
   - DOMAIN-SUFFIX,windowsupdate.com,US-Fallback
-  - DOMAIN-SUFFIX,update.microsoft.com,US-Fallback
-  - DOMAIN-SUFFIX,download.windowsupdate.com,US-Fallback
   - DOMAIN-SUFFIX,msftconnecttest.com,US-Fallback
   - DOMAIN-SUFFIX,msftncsi.com,US-Fallback
   - DOMAIN-SUFFIX,microsoftedge.com,US-Fallback
@@ -323,7 +362,6 @@ rules:
   - DOMAIN-SUFFIX,azurefd.net,US-Fallback
   - DOMAIN-SUFFIX,azurestaticapps.net,US-Fallback
   - DOMAIN-SUFFIX,visualstudio.com,US-Fallback
-  - DOMAIN-SUFFIX,visualstudio.microsoft.com,US-Fallback
   - DOMAIN-SUFFIX,vscode.dev,US-Fallback
   - DOMAIN-SUFFIX,vscode-cdn.net,US-Fallback
   - DOMAIN-SUFFIX,xbox.com,US-Fallback
@@ -337,12 +375,6 @@ rules:
   - DOMAIN-SUFFIX,msftauth.net,US-Fallback
   - DOMAIN-SUFFIX,msftidentity.com,US-Fallback
   - DOMAIN-SUFFIX,microsoftgraph.com,US-Fallback
-  - DOMAIN-SUFFIX,graph.microsoft.com,US-Fallback
-  - DOMAIN-SUFFIX,login.microsoftonline.com,US-Fallback
-  - DOMAIN-SUFFIX,login.live.com,US-Fallback
-  - DOMAIN-SUFFIX,account.microsoft.com,US-Fallback
-  - DOMAIN-SUFFIX,copilot.microsoft.com,US-Fallback
-  - DOMAIN-SUFFIX,githubcopilot.com,US-Fallback
 
   # 王者荣耀 / 腾讯 / 微信 / QQ
   - GEOSITE,tencent,DIRECT
@@ -412,7 +444,14 @@ rules:
   - DOMAIN-SUFFIX,ecombdstatic.com,DIRECT
   - DOMAIN-SUFFIX,ecombdvod.com,DIRECT
 
-  # Apple 全家桶 -> 美国坦帕优先，瑞典备用
+  # Apple 普通下载与更新：明确域名优先，其他服务保留原美国策略
+  - DOMAIN-SUFFIX,swcdn.apple.com,Apple-Services
+  - DOMAIN-SUFFIX,swdownload.apple.com,Apple-Services
+  - DOMAIN-SUFFIX,swscan.apple.com,Apple-Services
+  - DOMAIN-SUFFIX,updates.cdn-apple.com,Apple-Services
+  - DOMAIN-SUFFIX,mesu.apple.com,Apple-Services
+  - DOMAIN-SUFFIX,appldnld.apple.com,Apple-Services
+  # Apple AI 及其他 Apple 服务保留原策略
   - GEOSITE,apple,Apple-US
   - IP-CIDR,17.0.0.0/8,Apple-US,no-resolve
 
@@ -431,8 +470,6 @@ rules:
   - DOMAIN-SUFFIX,x.ai,OpenAI-US
   - DOMAIN-SUFFIX,cursor.com,OpenAI-US
   - DOMAIN-SUFFIX,cursor.sh,OpenAI-US
-  - DOMAIN-SUFFIX,githubcopilot.com,OpenAI-US
-  - DOMAIN,copilot.microsoft.com,OpenAI-US
   - DOMAIN-SUFFIX,poe.com,OpenAI-US
   - DOMAIN-SUFFIX,character.ai,OpenAI-US
   - DOMAIN-SUFFIX,manus.im,OpenAI-US
@@ -461,11 +498,10 @@ rules:
   - DOMAIN-SUFFIX,oculus.com,Meta
   - DOMAIN-SUFFIX,oculuscdn.com,Meta
   - DOMAIN-SUFFIX,meta.ai,Meta
-  - DOMAIN-SUFFIX,ai.meta.com,Meta
 
-  # PayPal -> 美国坦帕优先，瑞典备用
-  - DOMAIN-SUFFIX,paypal.com,US-Fallback
-  - DOMAIN-SUFFIX,paypalobjects.com,US-Fallback
+  # PayPal -> 美国坦帕优先、其他美国备用
+  - DOMAIN-SUFFIX,paypal.com,PayPal-US
+  - DOMAIN-SUFFIX,paypalobjects.com,PayPal-US
 
   # TikTok -> 美国坦帕优先、全美国备用、瑞典兜底
   - GEOSITE,tiktok,TikTok
@@ -487,9 +523,9 @@ rules:
   # Google 全家桶 -> 瑞典优先、越南备用；Gemini 已被上方 AI 规则优先匹配
   - GEOSITE,google,Overseas
 
-  # Wise
-  - DOMAIN-SUFFIX,wise.com,Overseas
-  - DOMAIN-SUFFIX,transferwise.com,Overseas
+  # Wise -> 瑞典地区，不跨国自动切换
+  - DOMAIN-SUFFIX,wise.com,Wise
+  - DOMAIN-SUFFIX,transferwise.com,Wise
 
   # GitHub / Telegram
   - GEOSITE,github,Overseas
