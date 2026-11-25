@@ -195,11 +195,14 @@ proxy-groups:
     timeout: 5000
     max-failed-times: 3
 
-  # Wise 固定瑞典地区，不自动跨国
+  # Wise 默认瑞典，手动选择其他地区，不自动跨国
   - name: Wise
     type: select
     proxies:
       - Sweden
+      - Vietnam
+      - US-Tampa
+      - US-All
 
   # 普通 Apple 下载及更新：默认直连，可手动切回原策略
   - name: Apple-Services
@@ -523,7 +526,7 @@ rules:
   # Google 全家桶 -> 瑞典优先、越南备用；Gemini 已被上方 AI 规则优先匹配
   - GEOSITE,google,Overseas
 
-  # Wise -> 瑞典地区，不跨国自动切换
+  # Wise -> 默认瑞典，可手动切换越南及美国
   - DOMAIN-SUFFIX,wise.com,Wise
   - DOMAIN-SUFFIX,transferwise.com,Wise
 
