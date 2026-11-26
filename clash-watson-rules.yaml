@@ -503,6 +503,8 @@ rules:
   - DOMAIN-SUFFIX,oculus.com,Meta
   - DOMAIN-SUFFIX,oculuscdn.com,Meta
   - DOMAIN-SUFFIX,meta.ai,Meta
+  # Muse 系列模型及 Muse Code 文档；api.meta.ai / dev.meta.ai 已由 meta.ai 覆盖
+  - DOMAIN-SUFFIX,musemuse.dev,Meta
 
   # PayPal -> 美国坦帕优先、其他美国备用
   - DOMAIN-SUFFIX,paypal.com,PayPal-US
