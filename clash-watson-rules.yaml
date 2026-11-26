@@ -223,17 +223,19 @@ proxy-groups:
       - Vietnam
       - DIRECT
 
-  # Meta 全家桶独立可选策略；默认保持美国坦帕优先、瑞典备用
+  # Meta 全家桶：坦帕优先、全美国、瑞典、越南依次备用
   - name: Meta
-    type: select
+    type: fallback
     proxies:
-      - US-Fallback
       - US-Tampa
       - US-All
       - Sweden
-      - Overseas
       - Vietnam
-      - DIRECT
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
 
 rules:
   # 局域网 / DLNA / UPnP / mDNS 优先直连
@@ -477,7 +479,7 @@ rules:
   - DOMAIN-SUFFIX,character.ai,OpenAI-US
   - DOMAIN-SUFFIX,manus.im,OpenAI-US
 
-  # Meta 全家桶 -> 独立 Meta 策略（默认 US-Fallback）
+  # Meta 全家桶 -> 独立 Meta 自动故障切换策略
   - DOMAIN-SUFFIX,meta.com,Meta
   - DOMAIN-SUFFIX,facebook.com,Meta
   - DOMAIN-SUFFIX,facebook.net,Meta
