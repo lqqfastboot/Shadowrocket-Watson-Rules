@@ -1,0 +1,584 @@
+# Watson Clash / Mihomo 轻量规则库 V4 (测试版)
+# 面向支持 proxy-groups + rules 的 iOS Clash 客户端规则库。
+# 不修改 DNS / TUN / 端口等客户端全局设置，不包含任何节点凭据。
+# 专用业务按各组顺序切换；Overseas 瑞典 > 越南 > 坦帕 > 全美国。
+
+proxy-groups:
+  - name: US-Tampa
+    type: url-test
+    include-all: true
+    filter: '(?i)(佛罗里达州.*坦帕|Tampa|Florida.*Tampa)'
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 100
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  # 美国全部地区节点自动测速；保留 US-Tampa 独立策略
+  - name: US-All
+    type: url-test
+    include-all: true
+    filter: '(?i)(美国|United States|USA|US[-_ ]|🇺🇸|Tampa|Florida|Los Angeles|New York|Seattle|San Jose)'
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 100
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  # 美国其他地区节点（排除坦帕），作为 US-Tampa 的备用
+  - name: US-Other
+    type: url-test
+    include-all: true
+    filter: '(?i)^(?!.*(?:Tampa|坦帕))(?=.*(?:美国|United States|USA|US[-_ ]|🇺🇸|Los Angeles|New York|Seattle|San Jose|洛杉矶|纽约|西雅图|圣何塞)).*$'
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 100
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  - name: Vietnam
+    type: url-test
+    include-all: true
+    filter: '(?i)(越南胡志明|Vietnam.*HCM|Ho Chi Minh)'
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 100
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  - name: Sweden
+    type: url-test
+    include-all: true
+    filter: '(?i)(瑞典|Sweden)'
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 100
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  - name: US-Fallback
+    type: fallback
+    proxies:
+      - US-Tampa
+      - US-Other
+      - Sweden
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  - name: Apple-US
+    type: fallback
+    proxies:
+      - US-Tampa
+      - US-Other
+      - Sweden
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  - name: OpenAI-US
+    type: fallback
+    proxies:
+      - US-Tampa
+      - US-Other
+      - Sweden
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  - name: Overseas
+    type: fallback
+    proxies:
+      - Sweden
+      - Vietnam
+      - US-Tampa
+      - US-All
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  # IBKR 盈透证券：坦帕优先，其他美国节点备用（不切换非美国出口）
+  - name: IBKR-US
+    type: fallback
+    proxies:
+      - US-Tampa
+      - US-Other
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  # Cindy 专用：美国坦帕优先，瑞典第一备用，越南第二备用
+  - name: Cindy
+    type: fallback
+    proxies:
+      - US-Tampa
+      - Sweden
+      - Vietnam
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  # Claude AI 专用：坦帕优先，美国全部节点备用
+  - name: Claude-AI
+    type: fallback
+    proxies:
+      - US-Tampa
+      - US-All
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  # TikTok 专用：美国坦帕优先、全美国备用、瑞典兜底
+  - name: TikTok
+    type: fallback
+    proxies:
+      - US-Tampa
+      - US-All
+      - Sweden
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  # Gemini 专用：美国坦帕优先、全美国备用、瑞典兜底
+  - name: Gemini
+    type: fallback
+    proxies:
+      - US-Tampa
+      - US-All
+      - Sweden
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  - name: Developer
+    type: fallback
+    proxies:
+      - US-Tampa
+      - US-All
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  - name: PayPal-US
+    type: fallback
+    proxies:
+      - US-Tampa
+      - US-Other
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  # Wise 默认瑞典，手动选择其他地区，不自动跨国
+  - name: Wise
+    type: select
+    proxies:
+      - Sweden
+      - Vietnam
+      - US-Tampa
+      - US-All
+
+  # 普通 Apple 下载及更新：默认直连，可手动切回原策略
+  - name: Apple-Services
+    type: select
+    proxies:
+      - DIRECT
+      - Apple-US
+
+  # X / Twitter 独立可选策略；默认保持美国坦帕优先、瑞典备用
+  - name: X
+    type: select
+    proxies:
+      - US-Fallback
+      - US-Tampa
+      - US-All
+      - Sweden
+      - Overseas
+      - Vietnam
+      - DIRECT
+
+  # Meta 全家桶：坦帕优先、全美国、瑞典、越南依次备用
+  - name: Meta
+    type: fallback
+    proxies:
+      - US-Tampa
+      - US-All
+      - Sweden
+      - Vietnam
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+    lazy: true
+    timeout: 5000
+    max-failed-times: 3
+
+  - name: AdBlock
+    type: select
+    proxies:
+      - REJECT
+      - DIRECT
+      - Overseas
+
+  - name: HTTPDNS
+    type: select
+    proxies:
+      - DIRECT
+      - REJECT
+      - Overseas
+
+rule-providers:
+  Watson-Ads:
+    type: http
+    behavior: classical
+    format: yaml
+    url: https://raw.githubusercontent.com/lqqfastboot/Shadowrocket-Watson-Rules/v4-optional-enhancements/enhancements/mihomo/ads.yaml
+    path: ./ruleset/watson-ads.yaml
+    interval: 86400
+  Watson-HTTPDNS:
+    type: http
+    behavior: classical
+    format: yaml
+    url: https://raw.githubusercontent.com/lqqfastboot/Shadowrocket-Watson-Rules/v4-optional-enhancements/enhancements/mihomo/httpdns.yaml
+    path: ./ruleset/watson-httpdns.yaml
+    interval: 86400
+
+rules:
+  # 局域网 / DLNA / UPnP / mDNS 优先直连
+  - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+  - IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
+  - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,169.254.0.0/16,DIRECT,no-resolve
+  - IP-CIDR,224.0.0.0/4,DIRECT,no-resolve
+  - IP-CIDR6,::1/128,DIRECT,no-resolve
+  - IP-CIDR6,fc00::/7,DIRECT,no-resolve
+  - IP-CIDR6,fe80::/10,DIRECT,no-resolve
+  - IP-CIDR6,ff02::/16,DIRECT,no-resolve
+  - DOMAIN-SUFFIX,local,DIRECT
+
+  # WebRTC / STUN 防真实 IP 泄漏
+  # 域名命中 STUN 时直接拒绝；端口规则仅限制 UDP，避免误伤 TCP/TURN 回退。
+  - DOMAIN-KEYWORD,stun,REJECT
+  - AND,((NETWORK,UDP),(DST-PORT,3478)),REJECT
+  - AND,((NETWORK,UDP),(DST-PORT,19302)),REJECT
+  - AND,((NETWORK,UDP),(DST-PORT,5349)),REJECT
+
+  # wczhsw.com 及其子域名强制直连（优先于海外分流）
+  - DOMAIN-SUFFIX,wczhsw.com,DIRECT
+
+  # V4: narrow domain lists before broad GEOSITE matches; DIRECT is not original routing.
+  - RULE-SET,Watson-Ads,AdBlock
+  - RULE-SET,Watson-HTTPDNS,HTTPDNS
+
+  # IBKR 盈透证券：官网、客户端、API、交易连接域名
+  - DOMAIN-SUFFIX,interactivebrokers.com,IBKR-US
+  - DOMAIN-SUFFIX,interactivebrokers.ca,IBKR-US
+  - DOMAIN-SUFFIX,interactivebrokers.ie,IBKR-US
+  - DOMAIN-SUFFIX,interactivebrokers.co.uk,IBKR-US
+  - DOMAIN-SUFFIX,interactivebrokers.co.in,IBKR-US
+  - DOMAIN-SUFFIX,interactivebrokers.co.jp,IBKR-US
+  - DOMAIN-SUFFIX,interactivebrokers.com.hk,IBKR-US
+  - DOMAIN-SUFFIX,interactivebrokers.com.sg,IBKR-US
+  - DOMAIN-SUFFIX,interactivebrokers.com.au,IBKR-US
+  - DOMAIN-SUFFIX,ibkr.com,IBKR-US
+  - DOMAIN-SUFFIX,ibkr.com.cn,IBKR-US
+  - DOMAIN-SUFFIX,ibllc.com,IBKR-US
+  - DOMAIN-SUFFIX,ibllc.com.cn,IBKR-US
+
+  # Cindy 服务专用域名：优先于其他海外及 GitHub 规则
+  - DOMAIN,auth.cindy.app,Cindy
+  - DOMAIN,chat.cindy.app,Cindy
+  - DOMAIN,device-link.cindy.app,Cindy
+  - DOMAIN,agent-net.cindy.app,Cindy
+  - DOMAIN,oauth-broker.cindy.app,Cindy
+  - DOMAIN,oss.cindy.app,Cindy
+  - DOMAIN,heartbeat.cindy.app,Cindy
+  - DOMAIN,webhook.cindy.app,Cindy
+  - DOMAIN,model-access.cindy.app,Cindy
+  - DOMAIN,llm-api.cindy.app,Cindy
+  - DOMAIN,voice.cindy.app,Cindy
+  - DOMAIN,github.cindy.app,Cindy
+  - DOMAIN,xd-skillhub.cindy.app,Cindy
+  - DOMAIN,cindy-skill-hub.cindy.app,Cindy
+  - DOMAIN,plugin.cindy.app,Cindy
+  - DOMAIN,hotfix.cindy.app,Cindy
+  - DOMAIN,mobile-update.cindy.app,Cindy
+  - DOMAIN,share.cindy.app,Cindy
+  - DOMAIN,telegram-hook.cindy.app,Cindy
+  - DOMAIN,x-hook.cindy.app,Cindy
+  - DOMAIN,feishu-hook.cindy.app,Cindy
+  - DOMAIN,slack-hook.cindy.app,Cindy
+
+  # Gemini 网页、AI Studio、Gemini API 专属域名；置于 Google 共享域名泛匹配前
+  - DOMAIN,gemini.google.com,Gemini
+  - DOMAIN,aistudio.google.com,Gemini
+  - DOMAIN,ai.google.dev,Gemini
+  - DOMAIN,makersuite.google.com,Gemini
+  - DOMAIN,alkalimakersuite-pa.clients6.google.com,Gemini
+  - DOMAIN,generativelanguage.googleapis.com,Gemini
+
+  # Claude AI 专属域名
+  - DOMAIN-SUFFIX,claude.ai,Claude-AI
+  - DOMAIN-SUFFIX,anthropic.com,Claude-AI
+  - DOMAIN-SUFFIX,claude.com,Claude-AI
+  # 共享开发依赖：保留原美国出口
+  - DOMAIN-SUFFIX,npmjs.org,Developer
+  - DOMAIN-SUFFIX,pypi.org,Developer
+  - DOMAIN-SUFFIX,pythonhosted.org,Developer
+  - DOMAIN-SUFFIX,github.com,Developer
+  - DOMAIN-SUFFIX,cloudflare.com,Developer
+  - DOMAIN-SUFFIX,jsdelivr.net,Developer
+  - DOMAIN-SUFFIX,unpkg.com,Developer
+  - DOMAIN-SUFFIX,tailwindcss.com,Developer
+  - DOMAIN-SUFFIX,jquery.com,Developer
+  # Google 共享资源：跟随普通海外策略，Gemini 专属 API 优先
+  - DOMAIN-SUFFIX,googleapis.com,Overseas
+  - DOMAIN-SUFFIX,gstatic.com,Overseas
+
+  # Copilot 专用规则优先于 Microsoft 泛匹配
+  - DOMAIN-SUFFIX,copilot.microsoft.com,OpenAI-US
+  - DOMAIN-SUFFIX,githubcopilot.com,OpenAI-US
+
+  # Microsoft 全家桶（Office / Microsoft 365 / Outlook / OneDrive / Teams / Windows / Azure / Xbox）
+  # 美国坦帕优先、瑞典备用；放在国内直连和 GEOIP CN 前。
+  - DOMAIN-SUFFIX,microsoft.com,US-Fallback
+  - DOMAIN-SUFFIX,microsoftonline.com,US-Fallback
+  - DOMAIN-SUFFIX,microsoft365.com,US-Fallback
+  - DOMAIN-SUFFIX,office.com,US-Fallback
+  - DOMAIN-SUFFIX,office365.com,US-Fallback
+  - DOMAIN-SUFFIX,office.net,US-Fallback
+  - DOMAIN-SUFFIX,officeapps.live.com,US-Fallback
+  - DOMAIN-SUFFIX,outlook.com,US-Fallback
+  - DOMAIN-SUFFIX,outlook.live.com,US-Fallback
+  - DOMAIN-SUFFIX,hotmail.com,US-Fallback
+  - DOMAIN-SUFFIX,live.com,US-Fallback
+  - DOMAIN-SUFFIX,live.net,US-Fallback
+  - DOMAIN-SUFFIX,onedrive.com,US-Fallback
+  - DOMAIN-SUFFIX,1drv.com,US-Fallback
+  - DOMAIN-SUFFIX,sharepoint.com,US-Fallback
+  - DOMAIN-SUFFIX,sharepointonline.com,US-Fallback
+  - DOMAIN-SUFFIX,skype.com,US-Fallback
+  - DOMAIN-SUFFIX,skypeassets.com,US-Fallback
+  - DOMAIN-SUFFIX,windows.com,US-Fallback
+  - DOMAIN-SUFFIX,windows.net,US-Fallback
+  - DOMAIN-SUFFIX,windowsupdate.com,US-Fallback
+  - DOMAIN-SUFFIX,msftconnecttest.com,US-Fallback
+  - DOMAIN-SUFFIX,msftncsi.com,US-Fallback
+  - DOMAIN-SUFFIX,microsoftedge.com,US-Fallback
+  - DOMAIN-SUFFIX,microsoftusercontent.com,US-Fallback
+  - DOMAIN-SUFFIX,bing.com,US-Fallback
+  - DOMAIN-SUFFIX,bing.net,US-Fallback
+  - DOMAIN-SUFFIX,msn.com,US-Fallback
+  - DOMAIN-SUFFIX,azure.com,US-Fallback
+  - DOMAIN-SUFFIX,azure.net,US-Fallback
+  - DOMAIN-SUFFIX,azureedge.net,US-Fallback
+  - DOMAIN-SUFFIX,azurewebsites.net,US-Fallback
+  - DOMAIN-SUFFIX,azurefd.net,US-Fallback
+  - DOMAIN-SUFFIX,azurestaticapps.net,US-Fallback
+  - DOMAIN-SUFFIX,visualstudio.com,US-Fallback
+  - DOMAIN-SUFFIX,vscode.dev,US-Fallback
+  - DOMAIN-SUFFIX,vscode-cdn.net,US-Fallback
+  - DOMAIN-SUFFIX,xbox.com,US-Fallback
+  - DOMAIN-SUFFIX,xboxlive.com,US-Fallback
+  - DOMAIN-SUFFIX,xboxservices.com,US-Fallback
+  - DOMAIN-SUFFIX,gamepass.com,US-Fallback
+  - DOMAIN-SUFFIX,microsoftstore.com,US-Fallback
+  - DOMAIN-SUFFIX,s-microsoft.com,US-Fallback
+  - DOMAIN-SUFFIX,msauth.net,US-Fallback
+  - DOMAIN-SUFFIX,msauthimages.net,US-Fallback
+  - DOMAIN-SUFFIX,msftauth.net,US-Fallback
+  - DOMAIN-SUFFIX,msftidentity.com,US-Fallback
+  - DOMAIN-SUFFIX,microsoftgraph.com,US-Fallback
+
+  # 王者荣耀 / 腾讯 / 微信 / QQ
+  - GEOSITE,tencent,DIRECT
+
+  # 支付宝 / 阿里系国内服务
+  - DOMAIN-SUFFIX,alipay.com,DIRECT
+  - DOMAIN-SUFFIX,alipayobjects.com,DIRECT
+
+  # 中国银行 / 银联 / 主要中资银行：显式直连
+  - DOMAIN-SUFFIX,boc.cn,DIRECT
+  - DOMAIN-SUFFIX,bankofchina.com,DIRECT
+  - DOMAIN-SUFFIX,icbc.com.cn,DIRECT
+  - DOMAIN-SUFFIX,ccb.com,DIRECT
+  - DOMAIN-SUFFIX,abchina.com,DIRECT
+  - DOMAIN-SUFFIX,bankcomm.com,DIRECT
+  - DOMAIN-SUFFIX,psbc.com,DIRECT
+  - DOMAIN-SUFFIX,cmbchina.com,DIRECT
+  - DOMAIN-SUFFIX,spdb.com.cn,DIRECT
+  - DOMAIN-SUFFIX,citicbank.com,DIRECT
+  - DOMAIN-SUFFIX,cmbc.com.cn,DIRECT
+  - DOMAIN-SUFFIX,cib.com.cn,DIRECT
+  - DOMAIN-SUFFIX,cebbank.com,DIRECT
+  - DOMAIN-SUFFIX,hxb.com.cn,DIRECT
+  - DOMAIN-SUFFIX,pingan.com,DIRECT
+  - DOMAIN-SUFFIX,pinganbank.com.cn,DIRECT
+  - DOMAIN-SUFFIX,cgbchina.com.cn,DIRECT
+  - DOMAIN-SUFFIX,95516.com,DIRECT
+  - DOMAIN-SUFFIX,unionpay.com,DIRECT
+  - DOMAIN-SUFFIX,unionpayintl.com,DIRECT
+  - DOMAIN-SUFFIX,chinapay.com,DIRECT
+
+  # 钱迹 App -> 直连
+  - DOMAIN-SUFFIX,qianjiapp.com,DIRECT
+  - DOMAIN-SUFFIX,xxoojoke.com,DIRECT
+  - DOMAIN-SUFFIX,litangkj.com,DIRECT
+  - DOMAIN-SUFFIX,qianjibillimage.kodo-accelerate.cn-south-1.qiniucs.com,DIRECT
+
+  # 酷安
+  - DOMAIN-SUFFIX,coolapk.com,DIRECT
+  - DOMAIN-SUFFIX,coolapkmarket.com,DIRECT
+
+  # 百度全家桶
+  - DOMAIN-SUFFIX,baidu.com,DIRECT
+  - DOMAIN-SUFFIX,baidupcs.com,DIRECT
+  - DOMAIN-SUFFIX,bdstatic.com,DIRECT
+  - DOMAIN-SUFFIX,bcebos.com,DIRECT
+  - DOMAIN-SUFFIX,baidustatic.com,DIRECT
+  - DOMAIN-SUFFIX,baiducontent.com,DIRECT
+  - DOMAIN-SUFFIX,bdimg.com,DIRECT
+  - DOMAIN-SUFFIX,bdydns.com,DIRECT
+
+  # 美团 / 大众点评
+  - DOMAIN-SUFFIX,meituan.com,DIRECT
+  - DOMAIN-SUFFIX,meituan.net,DIRECT
+  - DOMAIN-SUFFIX,sankuai.com,DIRECT
+  - DOMAIN-SUFFIX,mtyun.com,DIRECT
+  - DOMAIN-SUFFIX,dianping.com,DIRECT
+  - DOMAIN-SUFFIX,maoyan.com,DIRECT
+  - DOMAIN-SUFFIX,neixin.cn,DIRECT
+
+  # 抖音商城 / 电商
+  - DOMAIN-SUFFIX,douyinec.com,DIRECT
+  - DOMAIN-SUFFIX,jinritemai.com,DIRECT
+  - DOMAIN-SUFFIX,temaiapi.com,DIRECT
+  - DOMAIN-SUFFIX,ecombdapi.com,DIRECT
+  - DOMAIN-SUFFIX,ecombdimg.com,DIRECT
+  - DOMAIN-SUFFIX,ecombdstatic.com,DIRECT
+  - DOMAIN-SUFFIX,ecombdvod.com,DIRECT
+
+  # Apple 普通下载与更新：明确域名优先，其他服务保留原美国策略
+  - DOMAIN-SUFFIX,swcdn.apple.com,Apple-Services
+  - DOMAIN-SUFFIX,swdownload.apple.com,Apple-Services
+  - DOMAIN-SUFFIX,swscan.apple.com,Apple-Services
+  - DOMAIN-SUFFIX,updates.cdn-apple.com,Apple-Services
+  - DOMAIN-SUFFIX,mesu.apple.com,Apple-Services
+  - DOMAIN-SUFFIX,appldnld.apple.com,Apple-Services
+  # Apple AI 及其他 Apple 服务保留原策略
+  - GEOSITE,apple,Apple-US
+  - IP-CIDR,17.0.0.0/8,Apple-US,no-resolve
+
+  # OpenAI / ChatGPT 全家桶 -> 美国坦帕优先，瑞典备用
+  - DOMAIN-SUFFIX,openai.com,OpenAI-US
+  - DOMAIN-SUFFIX,chatgpt.com,OpenAI-US
+  - DOMAIN-SUFFIX,oaistatic.com,OpenAI-US
+  - DOMAIN-SUFFIX,oaiusercontent.com,OpenAI-US
+
+  # 其他 AI -> 美国坦帕优先，瑞典备用
+  - DOMAIN-SUFFIX,perplexity.ai,OpenAI-US
+  - DOMAIN-SUFFIX,llama.com,OpenAI-US
+
+  # AI 全家桶扩展 -> 美国坦帕优先，瑞典备用
+  - DOMAIN-SUFFIX,grok.com,OpenAI-US
+  - DOMAIN-SUFFIX,x.ai,OpenAI-US
+  - DOMAIN-SUFFIX,cursor.com,OpenAI-US
+  - DOMAIN-SUFFIX,cursor.sh,OpenAI-US
+  - DOMAIN-SUFFIX,poe.com,OpenAI-US
+  - DOMAIN-SUFFIX,character.ai,OpenAI-US
+  - DOMAIN-SUFFIX,manus.im,OpenAI-US
+
+  # Meta 全家桶 -> 独立 Meta 自动故障切换策略
+  - DOMAIN-SUFFIX,meta.com,Meta
+  - DOMAIN-SUFFIX,facebook.com,Meta
+  - DOMAIN-SUFFIX,facebook.net,Meta
+  - DOMAIN-SUFFIX,fb.com,Meta
+  - DOMAIN-SUFFIX,fb.me,Meta
+  - DOMAIN-SUFFIX,fbcdn.net,Meta
+  - DOMAIN-SUFFIX,fbcdn.com,Meta
+  - DOMAIN-SUFFIX,fbsbx.com,Meta
+  - DOMAIN-SUFFIX,messenger.com,Meta
+  - DOMAIN-SUFFIX,m.me,Meta
+  - DOMAIN-SUFFIX,instagram.com,Meta
+  - DOMAIN-SUFFIX,instagram.net,Meta
+  - DOMAIN-SUFFIX,cdninstagram.com,Meta
+  - DOMAIN-SUFFIX,ig.me,Meta
+  - DOMAIN-SUFFIX,threads.com,Meta
+  - DOMAIN-SUFFIX,threads.net,Meta
+  - DOMAIN-SUFFIX,threadsusercontent.com,Meta
+  - DOMAIN-SUFFIX,whatsapp.com,Meta
+  - DOMAIN-SUFFIX,whatsapp.net,Meta
+  - DOMAIN-SUFFIX,wa.me,Meta
+  - DOMAIN-SUFFIX,oculus.com,Meta
+  - DOMAIN-SUFFIX,oculuscdn.com,Meta
+  - DOMAIN-SUFFIX,meta.ai,Meta
+  # Muse 系列模型及 Muse Code 文档；api.meta.ai / dev.meta.ai 已由 meta.ai 覆盖
+  - DOMAIN-SUFFIX,musemuse.dev,Meta
+
+  # PayPal -> 美国坦帕优先、其他美国备用
+  - DOMAIN-SUFFIX,paypal.com,PayPal-US
+  - DOMAIN-SUFFIX,paypalobjects.com,PayPal-US
+
+  # TikTok -> 美国坦帕优先、全美国备用、瑞典兜底
+  - GEOSITE,tiktok,TikTok
+
+  # X / Twitter -> 独立 X 策略（默认 US-Fallback）
+  - DOMAIN-SUFFIX,x.com,X
+  - DOMAIN-SUFFIX,twitter.com,X
+  - DOMAIN-SUFFIX,twimg.com,X
+  - DOMAIN-SUFFIX,t.co,X
+  - DOMAIN-SUFFIX,tweetdeck.com,X
+  - DOMAIN-SUFFIX,twitter.net,X
+  - DOMAIN-SUFFIX,twtrdns.net,X
+  - DOMAIN-SUFFIX,pscp.tv,X
+  - DOMAIN-SUFFIX,periscope.tv,X
+
+  # YouTube -> 瑞典优先、越南备用（必须位于 Google 前）
+  - GEOSITE,youtube,Overseas
+
+  # Google 全家桶 -> 瑞典优先、越南备用；Gemini 已被上方 AI 规则优先匹配
+  - GEOSITE,google,Overseas
+
+  # Wise -> 默认瑞典，可手动切换越南及美国
+  - DOMAIN-SUFFIX,wise.com,Wise
+  - DOMAIN-SUFFIX,transferwise.com,Wise
+
+  # GitHub / Telegram
+  - GEOSITE,github,Overseas
+  - GEOSITE,telegram,Overseas
+
+  # 海外网站总策略：所有非中国域名统一走代理
+  # 已在上方命中的专用策略保持不变
+  - GEOSITE,geolocation-!cn,Overseas
+
+  # 中国网站总策略：国内域名 / IP 直连
+  - GEOSITE,cn,DIRECT
+  - GEOIP,CN,DIRECT,no-resolve
+
+  # 兜底：未匹配流量仍走海外代理，避免海外网站意外直连
+  - MATCH,Overseas
